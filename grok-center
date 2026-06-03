@@ -8,6 +8,13 @@ set -euo pipefail
 REPO_DIR="/data/PCaC-Playgrounds"
 source "$REPO_DIR/scripts/lib/common.sh"
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+  echo "Usage: grok-center"
+  echo "Launches the Center Orchestrator chat viewer (tails left-chat.log and right-chat.log)."
+  echo "Use pcac_post_chat from lib/common.sh (or edit logs) to respond as Center Grok."
+  exit 0
+fi
+
 echo "Starting Center Orchestrator Grok chat viewer..."
 echo "This shows messages from Left Grok and Right Grok personas."
 echo "To respond to Left: use 'pcac_post_chat left \"Center Grok (to Left)\" \"your response\"' (after sourcing lib/common.sh)"

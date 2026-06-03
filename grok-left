@@ -8,6 +8,13 @@ set -euo pipefail
 REPO_DIR="/data/PCaC-Playgrounds"
 source "$REPO_DIR/scripts/lib/common.sh"
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+  echo "Usage: grok-left [user-label]"
+  echo "Launches the Left Grok persona (tmux watch + chat on Left monitor DP-3)."
+  echo "Optional user-label for remote 'User cursor' distinction."
+  exit 0
+fi
+
 USER_LABEL="${1:-$(whoami)}"
 
 echo "Starting Left Grok persona for user: $USER_LABEL"
