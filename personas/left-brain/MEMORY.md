@@ -12,7 +12,7 @@ Edit by hand or ask Center to add a bullet after a decision.
 - Models target directory: `/data/AI/models`
 - LM Studio state: `~/.lmstudio` → `/data/AI/lmstudio`
 - Suggestion board: `http://127.0.0.1:8765` (when service running)
-- SearxNG: needs localhost-only fix (per PC-Stuff snapshot)
+- SearXNG: `http://127.0.0.1:8080` (Docker `searxng`, localhost bind; `docker start searxng` after reboot)
 
 ## Running context
 
