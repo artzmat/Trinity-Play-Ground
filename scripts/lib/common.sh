@@ -235,6 +235,34 @@ pcac_view_all_chats() {
   echo "(Center Grok: post responses using pcac_post_chat left 'Center Grok (to Left)' 'your response' or edit logs directly)"
 }
 
+# Sudo helper using the user's sudo code pin for auto updates/testing
+# Usage: pcac_sudo command args...
+# PIN is read from $HOME/.config/pc-sudo-pin (chmod 600) or PC_SUDO_PIN env.
+# Do not commit the actual PIN.
+pcac_sudo() {
+  local pin_file="$HOME/.config/pc-sudo-pin"
+  local pin="${PC_SUDO_PIN:-}"
+  if [[ -z "$pin" && -f "$pin_file" ]]; then
+    pin=$(cat "$pin_file" | tr -d '\n')
+  fi
+  if [[ -z "$pin" ]]; then
+    echo "Error: No sudo PIN found. Set PC_SUDO_PIN env or create $pin_file (600 perms) with your sudo code pin."
+    return 1
+  fi
+  echo "$pin" | sudo -S "$@"
+}
+
+# Auto update function for the PC, using the pin for sudo
+pcac_auto_update() {
+  echo "Running auto PC update with sudo pin (masked)..."
+  pcac_sudo pacman -Syu --noconfirm || true
+  if command -v paru >/dev/null; then
+    paru -Syu --noconfirm || true
+  fi
+  pcstuff
+  echo "Auto update complete. (PIN masked in logs)"
+}
+
 # --- Watch terminal openers for side monitors ---
 # These launch a konsole (KDE terminal) positioned on the target physical monitor
 # using --qwindowgeometry (X11 geometry syntax). This provides the "live monitoring

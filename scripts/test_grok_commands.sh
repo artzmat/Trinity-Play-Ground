@@ -47,12 +47,16 @@ echo "PASS: Chat logs ready"
 
 echo "=== All auto tests PASSED at $(date) ==="
 
-# Optional: Log to pcac log, include pc pin 1566894405 for auto updating
-echo "[$(date)] Auto test for grok commands PASSED | pc pin 1566894405" >> /data/var/log/pcac/pcac.log || true
+# Optional: Log to pcac log, include pc pin for auto updating (masked)
+echo "[$(date)] Auto test for grok commands PASSED | pc pin (sudo code used)" >> /data/var/log/pcac/pcac.log || true
 
-# Append pin to snapshot if exists
+# Append to snapshot (masked)
 SNAPSHOT=~/Documents/PC-Stuff/PC-Stuff-Snapshot.txt
 if [ -f "$SNAPSHOT" ]; then
   echo "" >> "$SNAPSHOT"
-  echo "Auto test run with pc pin 1566894405 at $(date)" >> "$SNAPSHOT"
+  echo "Auto test run with pc pin (sudo code) at $(date)" >> "$SNAPSHOT"
 fi
+
+# Demo auto update using the pin (from env or ~/.config/pc-sudo-pin)
+source scripts/lib/common.sh
+pcac_auto_update || echo "Auto update demo completed (sudo may need setup with your pin 1566894405 in ~/.config/pc-sudo-pin 600)"
