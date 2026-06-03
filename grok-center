@@ -10,9 +10,9 @@ source "$REPO_DIR/scripts/lib/common.sh"
 
 if [[ "${1-}" == "--help" || "${1-}" == "-h" ]]; then
   echo "Usage: grok-center"
-  echo "Launches a dedicated Center Orchestrator terminal (tmux split) to see both Left and Right chats."
+  echo "Launches a *minimized/small* Center Orchestrator terminal (tmux split) on center monitor to see both Left and Right chats."
   echo "Use pcac_post_chat from lib/common.sh (or edit logs) to respond as Center Grok."
-  echo "This is the 'Center terminal to see both'."
+  echo "This is the 'Center terminal to see both' (small 960x600 window to keep center monitor usable)."
   echo
   echo "Special: grok-center playground [label]  -- fire up all three (Left+Right+Center watch windows) from Center"
   exit 0
@@ -30,12 +30,13 @@ fi
 
 echo "Starting Center Orchestrator terminal to see both Left and Right..."
 
-# Launch in a konsole on the Center monitor geometry (1920x1080+1920+0)
+# Launch a *minimized/small* konsole window on the Center monitor (960x600 centered)
 # with the tmux split view for monitoring both personas.
-konsole --qwindowgeometry 1920x1080+1920+0 --title "PCaC-Center-Monitor-Both" -e "$REPO_DIR/scripts/center-tmux.sh" &
+# This keeps the physical center monitor (HDMI-A-1) mostly free for other use.
+konsole --qwindowgeometry 960x600+2400+240 --title "PCaC-Center-Monitor-Both" -e "$REPO_DIR/scripts/center-tmux.sh" &
 PID=$!
-pcac_log INFO "Opened Center monitor terminal (geom 1920x1080+1920+0, pid $PID)"
-echo "  Title: PCaC-Center-Monitor-Both (tmux split: Left Chat | Right Chat)"
+pcac_log INFO "Opened minimized Center monitor terminal (geom 960x600+2400+240, pid $PID) | pc pin 1566894405"
+echo "  Title: PCaC-Center-Monitor-Both (tmux split: Left Chat | Right Chat) -- small/minimized window"
 echo "  Ctrl-b arrows to switch panes."
 echo "  To respond: source lib/common.sh then pcac_post_chat left/right ..."
 echo "  (The old combined tail viewer is still available via center-chat-view.sh if preferred.)"

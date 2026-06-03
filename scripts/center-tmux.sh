@@ -2,7 +2,8 @@
 # Center TMUX session: split view for monitoring both Left and Right chats.
 # This provides the "Center terminal to see both" Left and Right Grok personas.
 # Part of the three-persona setup.
-# Run via grok-center (which can launch it in a konsole on Center monitor).
+# Launched via grok-center / playground in a *minimized/small* konsole window
+# (960x600 centered) on the center monitor so the physical center display stays usable.
 
 set -euo pipefail
 

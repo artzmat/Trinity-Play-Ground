@@ -383,7 +383,9 @@ USERJS
 pcac_open_center_monitor() {
   local user_label="${1:-$(whoami)}"
   local tmux_script="${PCAC_ROOT}/scripts/center-tmux.sh"
-  local geom="1920x1080+1920+0"  # Center monitor (HDMI-A-1)
+  # Smaller "minimized" window on Center monitor (HDMI-A-1) so the physical center
+  # monitor remains mostly usable for other desktop work. Centered 960x600 floating window.
+  local geom="960x600+2400+240"
   local title="PCaC-Center-Monitor-Both-${user_label}"
 
   if [[ ! -x "$tmux_script" ]]; then
@@ -393,8 +395,8 @@ pcac_open_center_monitor() {
 
   konsole --qwindowgeometry "$geom" --title "$title" -e "$tmux_script" &
   local pid=$!
-  pcac_log INFO "Opened Center monitor terminal (geom $geom, user=$user_label, pid $pid) | pc pin 1566894405"
-  echo "  Title: $title (tmux split: Left Chat | Right Chat | Status)"
+  pcac_log INFO "Opened minimized Center monitor terminal (geom $geom, user=$user_label, pid $pid) | pc pin 1566894405"
+  echo "  Title: $title (tmux split: Left Chat | Right Chat | Status) -- minimized/small window on center monitor"
   echo "  Ctrl-b to switch panes. Status includes pin marker."
   echo "  To close: close the konsole window or kill $pid"
 }
@@ -404,7 +406,7 @@ pcac_open_center_monitor() {
 # this fires up the three terminals with watch windows:
 #   - Left: konsole on DP-3 running tmux (watch top + Left Grok chat bottom)
 #   - Right: konsole on DP-2 running tmux (watch top + Right Grok chat bottom)
-#   - Center: konsole on HDMI-A-1 running tmux split view of both chats + status
+#   - Center: small/minimized konsole window on HDMI-A-1 (960x600 centered) running tmux split view of both chats + status
 # Supports optional user-label for "User cursor" (e.g. playground alice for remote).
 # Logs include "pc pin 1566894405" for auto/snapshot context.
 pcac_launch_playground() {
