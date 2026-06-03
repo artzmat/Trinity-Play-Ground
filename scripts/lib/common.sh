@@ -174,3 +174,64 @@ pcac_suggestion_service_port() {
   echo "${PCAC_SUGGESTION_PORT:-8765}"
 }
 
+# --- Kiosk profile helpers (for locked-down Left browser) ---
+# These create and manage a dedicated, privacy-hardened Firefox profile
+# stored under shared/ (so it lives on /data and is gitignored).
+# The profile is intended for kiosk use only: no telemetry, no history,
+# restricted downloads, etc. This function is purely for setup — it does
+# not launch Firefox or change any runtime behavior.
+
+pcac_kiosk_profile_dir() {
+  echo "${PCAC_SHARED_DIR}/firefox-kiosk-profile"
+}
+
+pcac_ensure_kiosk_profile() {
+  local dir
+  dir="$(pcac_kiosk_profile_dir)"
+
+  if [[ -d "$dir" ]]; then
+    echo "$dir"
+    return 0
+  fi
+
+  mkdir -p "$dir" "$dir/downloads" "$dir/cache"
+
+  # Write a minimal prefs.js focused on privacy and kiosk safety.
+  # These are the kinds of settings we want for a controlled "chill layer".
+  cat > "$dir/prefs.js" << 'PREFS'
+user_pref("browser.shell.checkDefaultBrowser", false);
+user_pref("browser.startup.homepage", "about:blank");
+user_pref("browser.startup.page", 0);
+user_pref("browser.tabs.warnOnClose", false);
+user_pref("browser.tabs.warnOnCloseOtherTabs", false);
+user_pref("browser.tabs.warnOnOpen", false);
+user_pref("browser.sessionstore.resume_from_crash", false);
+user_pref("browser.sessionstore.max_tabs_undo", 0);
+user_pref("datareporting.policy.dataSubmissionEnabled", false);
+user_pref("datareporting.healthreport.uploadEnabled", false);
+user_pref("toolkit.telemetry.enabled", false);
+user_pref("toolkit.telemetry.unified", false);
+user_pref("toolkit.telemetry.server", "");
+user_pref("browser.safebrowsing.enabled", false);
+user_pref("browser.safebrowsing.malware.enabled", false);
+user_pref("browser.download.useDownloadDir", false);
+user_pref("browser.download.dir", "");
+user_pref("browser.download.folderList", 2);
+user_pref("browser.download.always_ask_before_handling_new_types", true);
+user_pref("signon.rememberSignons", false);
+user_pref("signon.autofillForms", false);
+user_pref("places.history.enabled", false);
+user_pref("privacy.history.custom", true);
+user_pref("network.cookie.cookieBehavior", 0);
+PREFS
+
+  # Also create a user.js (stronger overrides that survive some Firefox updates)
+  cat > "$dir/user.js" << 'USERJS'
+user_pref("toolkit.telemetry.reportingpolicy.firstRun", false);
+user_pref("datareporting.policy.firstRunURL", "");
+USERJS
+
+  pcac_log INFO "Created restricted Firefox kiosk profile at $dir"
+  echo "$dir"
+}
+
