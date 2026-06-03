@@ -11,26 +11,31 @@ set -euo pipefail
 
 usage() {
   cat <<USAGE
-Usage: $(basename "$0") [--help] [--detect] [--dry-run]
+Usage: $(basename "$0") [options]
 
-Right Playground — media, games, files / high-engagement layer (targeting right monitor).
+Right Playground — media, games, files / high-engagement layer (targeting right monitor = $PCAC_RIGHT_MONITOR).
 
 Options:
-  --help     Show this help
-  --detect   Detect display outputs + print env then exit
-  --dry-run  (default behavior for placeholder) Show plan only
+  --help               Show this help
+  --detect             Detect display outputs + print env then exit
+  --dry-run            (default) Show plan only
+  --view-suggestions   View the shared suggestion board written by Left
+  --open-shared        Open a file browser / terminal on the shared suggestions folder
 
 Expansion points for Grok Center:
   - Gaming session launcher (Steam Big Picture, Lutris, etc. on right output)
   - Media player / Spotify / local media library full-screen
-  - File browser or project explorer isolated to this side
+  - File browser or project explorer isolated to this side (see --open-shared)
   - VM or container session for less-trusted / high-perf workloads
+  - Easy "accept suggestion" flow (e.g. one-click launch game/playlist from Left idea)
   - Easy switching / focus management between left (chill) and right (play)
 USAGE
 }
 
 main() {
   local mode="run"
+  local do_view=false
+  local do_open_shared=false
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -46,6 +51,14 @@ main() {
         mode="dry"
         shift
         ;;
+      --view-suggestions)
+        do_view=true
+        shift
+        ;;
+      --open-shared)
+        do_open_shared=true
+        shift
+        ;;
       *)
         pcac_log WARN "Unknown argument: $1"
         usage
@@ -58,33 +71,53 @@ main() {
   pcac_install_trap
 
   pcac_banner "RIGHT PLAYGROUND"
-  pcac_log INFO "Monitor: Right"
+  pcac_log INFO "Monitor: Right → $PCAC_RIGHT_MONITOR"
   pcac_log INFO "Purpose: Spotify / Games / Files / Media"
   pcac_show_env
 
   if [[ "$mode" == "detect" ]]; then
-    pcac_detect_outputs
+    pcac_list_monitors
     exit 0
   fi
 
-  pcac_log INFO "Status: Placeholder ready. Grok Center will expand this."
+  pcac_log INFO "Status: Ready to consume suggestions from Left + play. Grok Center expands this."
+
+  if $do_view; then
+    pcac_show_suggestions
+  fi
+
+  if $do_open_shared; then
+    local shared
+    shared="$PCAC_SHARED_DIR"
+    pcac_log INFO "Opening shared suggestions area: $shared/suggestions"
+    # Prefer a terminal file manager or just ls + instructions
+    if command -v dolphin >/dev/null 2>&1; then
+      dolphin "$shared/suggestions" &
+    elif command -v nautilus >/dev/null 2>&1; then
+      nautilus "$shared/suggestions" &
+    else
+      ls -l "$shared/suggestions"
+      pcac_log INFO "Use your favorite file manager or: cd $shared/suggestions"
+    fi
+  fi
 
   # === EXPANSION POINTS (Grok will fill these in over time) ===
   # 1. Launch gaming environment (e.g. steam -bigpicture) targeted at right output.
   # 2. Start media center / music player with nice full-screen UI.
-  # 3. File manager or project tree for active work that belongs on the "play" side.
+  # 3. File manager or project tree for active work that belongs on the "play" side (see --open-shared).
   # 4. Use pcac_launch_on_output "right" <command...> once real targeting exists.
   # 5. Handle audio routing, controller detection, etc. for games.
+  # 6. "Accept suggestion" flows (e.g. if suggestion mentions a game, one-click launch it here).
 
-  pcac_detect_outputs
+  pcac_list_monitors
 
   pcac_log INFO "Next steps will be added here (gaming session, media player, VM launch, etc.)"
 
   if [[ "$mode" == "dry" || "$mode" == "run" ]]; then
-    pcac_log INFO "(placeholder / dry-run mode — no real full-screen app launched yet)"
+    pcac_log INFO "(placeholder / dry-run mode — use --view-suggestions or --open-shared to interact with Left)"
   fi
 
-  pcac_log INFO "Right playground launcher complete (placeholder)."
+  pcac_log INFO "Right playground launcher complete."
 }
 
 main "$@"

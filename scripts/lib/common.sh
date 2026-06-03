@@ -20,8 +20,26 @@ export PCAC_DATA_ROOT
 PCAC_LOG_DIR="${PCAC_LOG_DIR:-${PCAC_DATA_ROOT}/var/log/pcac}"
 export PCAC_LOG_DIR
 
+# Shared data directory (for suggestions board, files visible to Left + Right, etc.)
+# Lives inside the repo for convenience but is gitignored (runtime data only).
+PCAC_SHARED_DIR="${PCAC_SHARED_DIR:-${PCAC_ROOT}/shared}"
+export PCAC_SHARED_DIR
+
+# --- 3-monitor KDE Plasma Wayland mapping (from kscreen-doctor + xrandr) ---
+# Physical layout (left-to-right):
+#   DP-3 (left, 0,0)     → Left Playground (chill / suggestions / internet)
+#   HDMI-A-1 (center)    → Center / Grok CLI (orchestrator / brain)
+#   DP-2 (right, 3840,0) → Right Playground (media / games / files)
+#
+# Override via environment if your hardware or layout changes.
+PCAC_LEFT_MONITOR="${PCAC_LEFT_MONITOR:-DP-3}"
+PCAC_CENTER_MONITOR="${PCAC_CENTER_MONITOR:-HDMI-A-1}"
+PCAC_RIGHT_MONITOR="${PCAC_RIGHT_MONITOR:-DP-2}"
+
+export PCAC_LEFT_MONITOR PCAC_CENTER_MONITOR PCAC_RIGHT_MONITOR
+
 pcac_ensure_dirs() {
-  mkdir -p "$PCAC_LOG_DIR"
+  mkdir -p "$PCAC_LOG_DIR" "$PCAC_SHARED_DIR/suggestions"
 }
 
 pcac_log() {
@@ -84,3 +102,75 @@ pcac_banner() {
   echo "  $title"
   echo "========================================"
 }
+
+# --- Monitor helpers (KDE Plasma / kscreen-doctor aware) ---
+
+pcac_monitor_for_side() {
+  local side="$1"
+  case "$side" in
+    left|Left|L)  echo "$PCAC_LEFT_MONITOR" ;;
+    center|Center|C) echo "$PCAC_CENTER_MONITOR" ;;
+    right|Right|R) echo "$PCAC_RIGHT_MONITOR" ;;
+    *) echo "$PCAC_CENTER_MONITOR" ;;
+  esac
+}
+
+pcac_list_monitors() {
+  pcac_log INFO "PCaC monitor mapping (KDE Plasma Wayland):"
+  echo "  Left   Playground → $PCAC_LEFT_MONITOR   (physical left)"
+  echo "  Center / Grok      → $PCAC_CENTER_MONITOR (orchestrator)"
+  echo "  Right  Playground → $PCAC_RIGHT_MONITOR  (physical right)"
+  echo
+  if command -v kscreen-doctor >/dev/null 2>&1; then
+    pcac_log DEBUG "kscreen-doctor -o (current geometry):"
+    kscreen-doctor -o 2>/dev/null | grep -E 'Output:|Geometry:' | head -20 || true
+  elif command -v xrandr >/dev/null 2>&1; then
+    xrandr --listmonitors 2>/dev/null || true
+  fi
+}
+
+# --- Suggestion board helpers ---
+
+pcac_suggestions_file() {
+  echo "${PCAC_SHARED_DIR}/suggestions/suggestions.txt"
+}
+
+pcac_ensure_suggestions() {
+  local f
+  f="$(pcac_suggestions_file)"
+  mkdir -p "$(dirname "$f")"
+  touch "$f"
+  echo "$f"
+}
+
+pcac_append_suggestion() {
+  local text="$*"
+  local f
+  f="$(pcac_ensure_suggestions)"
+  local ts
+  ts="$(date -Iseconds)"
+  printf '[%s] %s\n' "$ts" "$text" >> "$f"
+  pcac_log INFO "Suggestion recorded: $text"
+}
+
+pcac_show_suggestions() {
+  local f
+  f="$(pcac_ensure_suggestions)"
+  pcac_log INFO "Current suggestions (from $(pcac_suggestions_file)):"
+  if [[ -s "$f" ]]; then
+    cat "$f"
+  else
+    echo "(no suggestions yet)"
+  fi
+}
+
+# --- Web service helpers (for the local suggestion board) ---
+
+pcac_suggestion_service_script() {
+  echo "${PCAC_ROOT}/scripts/suggestion_service.py"
+}
+
+pcac_suggestion_service_port() {
+  echo "${PCAC_SUGGESTION_PORT:-8765}"
+}
+

@@ -49,3 +49,6 @@ Thumbs.db
 pcac-state/
 state/
 *.pcac
+
+# Shared playground data (suggestions board, etc.) — runtime, not committed
+shared/
