@@ -23,6 +23,10 @@
 PCaC-Playgrounds/
 ├── README.md
 ├── .gitignore
+├── personas/                    # Left-Brain / Right-Brain / Center prompts + memory (git)
+│   ├── left-brain/              # SYSTEM.md + MEMORY.md
+│   ├── right-brain/
+│   └── center/
 ├── scripts/
 │   ├── left-playground.sh       # Target: left monitor (chill + suggestions + kiosk)
 │   ├── center-playground.sh     # Grok Center / main orchestrator + control
@@ -30,6 +34,7 @@ PCaC-Playgrounds/
 │   ├── suggestion_service.py    # Local-only web form for the shared suggestion board
 │   └── lib/
 │       └── common.sh            # Shared: logging, paths, monitor mapping, suggestions helpers
+├── docs/                        # Setup notes (brains audit, phase logs)
 ├── shared/                      # Runtime shared data (gitignored)
 │   └── suggestions/
 │       └── suggestions.txt      # Written by Left, readable by Center + Right
@@ -59,6 +64,18 @@ Shared playground data (suggestions etc.) → `shared/` (inside repo for conveni
 - `pcac_view_all_chats` for Center overview.
 - `pcac_list_monitors` + friendly side → output mapping using kscreen-doctor + xrandr.
 - Everything logs + is reversible.
+
+## Left-Brain / Right-Brain personas (prompt + memory, no fine-tuning)
+
+Distinct personalities live under `personas/`:
+
+- **Left-Brain** (`personas/left-brain/`) — analytical, structured, chill-layer support
+- **Right-Brain** (`personas/right-brain/`) — creative, options-oriented, play/media
+- **Center** (`personas/center/MEMORY.md`) — orchestrator notes in repo
+
+Local LM Studio will load these as system context in Phase 2 (`ask:` in side chats). Until then, edit `MEMORY.md` by hand and use `grok:` for Center.
+
+See `docs/brains-audit-20260603.md` and `docs/brains-phase1a-20260603.md` for storage setup on `/data/AI`.
 
 ## Three-Persona "PC into Three" Setup (Left Grok / Right Grok / Center Orchestrator Grok)
 The goal is to turn one physical PC + 3 monitors into three logical "computers"/personas:
