@@ -35,6 +35,7 @@ PCaC-Playgrounds/
 │   └── lib/
 │       └── common.sh            # Shared: logging, paths, monitor mapping, suggestions helpers
 ├── docs/                        # Setup notes (brains audit, phase logs)
+├── secrets/                     # VM guest creds — vm-guest.txt is gitignored
 ├── shared/                      # Runtime shared data (gitignored)
 │   └── suggestions/
 │       └── suggestions.txt      # Written by Left, readable by Center + Right
