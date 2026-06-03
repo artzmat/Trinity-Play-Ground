@@ -106,7 +106,13 @@ See the launchers' --help for full options. Use `pcac_post_chat` etc from common
 ./scripts/center-playground.sh --watch-right remote1 # full Right screen: watch + Right Grok chat box (remote label)
 ./scripts/center-playground.sh --view-chats          # tail both chats here in Center
 
-# In Left chat box (bottom pane of --watch-left): type
+# Convenient global commands (added to ~/.local/bin/, available anywhere in fish)
+grok-left          # start/attach Left Grok persona (tmux: watch top + chat bottom on Left monitor)
+grok-right         # start/attach Right Grok persona (tmux: watch top + chat bottom on Right monitor)
+grok-center        # launch Center orchestrator chat viewer (tails both Left + Right chats)
+grok-left alice    # with "User cursor: alice" label for remote users
+
+# In Left chat box (bottom pane of grok-left or --watch-left): type
 #   grok: what do you think about cozy games for the Right side?
 # Center Grok (you here) responds by posting to the log (or using pcac_post_chat)
 
