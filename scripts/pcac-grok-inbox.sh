@@ -34,4 +34,5 @@ for o in queries[-n:]:
     print(f"  {o.get('text')}")
     print()
 PY
-echo "Reply: pcac_center_reply left|right \"message\""
+echo "Reply: pcac_center_reply left|right \"message\"  |  both: pcac_center_reply_both \"...\""
+echo "Ask both brains: pcac-ask-both.sh \"question\" $(whoami)"

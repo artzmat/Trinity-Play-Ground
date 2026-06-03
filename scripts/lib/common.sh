@@ -240,6 +240,56 @@ pcac_ask_brain() {
   python3 "${PCAC_ROOT}/scripts/pcac_ask_brain.py" "$side" "$msg" "$user_label"
 }
 
+# Center asks both local brains (parallel). Logs prompt to both chats + bus first.
+pcac_ask_both() {
+  local msg="$1"
+  local user_label="${2:-$(whoami)}"
+  local from="Center Grok (ask both, ${user_label})"
+  local flat
+  flat="$(echo "$msg" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ //;s/ $//')"
+
+  pcac_post_chat left "$from" "ask: ${flat}" "ask_both"
+  pcac_post_chat right "$from" "ask: ${flat}" "ask_both"
+
+  local left_out right_out
+  left_out="$(mktemp)"
+  right_out="$(mktemp)"
+  trap 'rm -f "$left_out" "$right_out"' RETURN
+
+  local pid_left pid_right left_ec=0 right_ec=0
+  echo "[$(date '+%H:%M:%S')] Asking Left-Brain and Right-Brain in parallel..."
+
+  pcac_ask_brain left "$msg" "$user_label" >"$left_out" 2>&1 &
+  pid_left=$!
+  pcac_ask_brain right "$msg" "$user_label" >"$right_out" 2>&1 &
+  pid_right=$!
+
+  wait "$pid_left" || left_ec=$?
+  wait "$pid_right" || right_ec=$?
+
+  echo ""
+  echo "=== Left-Brain ==="
+  cat "$left_out"
+  echo ""
+  echo "=== Right-Brain ==="
+  cat "$right_out"
+  echo ""
+
+  if (( left_ec != 0 || right_ec != 0 )); then
+    pcac_log WARN "ask_both: left exit=${left_ec} right exit=${right_ec}"
+    return 1
+  fi
+  pcac_log INFO "ask_both completed for: ${flat}"
+  return 0
+}
+
+# Center posts the same message to Left and Right chats + bus.
+pcac_center_reply_both() {
+  local msg="$1"
+  pcac_center_reply left "$msg"
+  pcac_center_reply right "$msg"
+}
+
 pcac_tail_bus() {
   local n="${1:-15}"
   pcac_ensure_chats
