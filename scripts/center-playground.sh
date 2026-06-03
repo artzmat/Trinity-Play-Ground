@@ -27,8 +27,11 @@ Options:
   --launch-right       Also invoke right-playground.sh (with its defaults)
   --start-suggestions  Start the shared local suggestion web service (via left)
   --view-suggestions   Show suggestions from the shared board
-  --watch-left [USER]  Open live health/logs watch terminal on Left monitor (with optional remote user cursor label)
-  --watch-right [USER] Open live git watch terminal on Right monitor (with optional remote user cursor label)
+  --watch-left [USER]  Open full Left screen (DP-3): tmux watch (health/logs) + chat box for Left Grok persona.
+                       'grok: ...' in chat to query Center. Supports remote user labels.
+  --watch-right [USER] Open full Right screen (DP-2): tmux watch (git) + chat box for Right Grok persona.
+                       'grok: ...' in chat to query Center. Supports remote user labels.
+  --view-chats         View/tail both Left and Right chats from Center (orchestrator view).
 
 The suggestion board (simple Python + HTML) is the first real shared feature:
   Left  → can submit via kiosk form
@@ -70,6 +73,7 @@ main() {
   local do_watch_right=false
   local watch_left_user=""
   local watch_right_user=""
+  local do_view_chats=false
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -116,6 +120,10 @@ main() {
           watch_right_user="$1"
           shift
         fi
+        ;;
+      --view-chats)
+        do_view_chats=true
+        shift
         ;;
       *)
         pcac_log WARN "Unknown argument: $1"
@@ -170,6 +178,10 @@ main() {
     else
       "${PCAC_ROOT}/scripts/right-playground.sh" --watch
     fi
+  fi
+
+  if $do_view_chats; then
+    "${PCAC_ROOT}/scripts/center-chat-view.sh"
   fi
 
   if $do_left; then

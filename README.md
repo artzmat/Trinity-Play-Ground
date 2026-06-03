@@ -45,30 +45,83 @@ Shared playground data (suggestions etc.) → `shared/` (inside repo for conveni
 - `--view-suggestions` (all sides): Shows the shared board.
 - `--kiosk` (Left): Prints ready-to-use locked-down Firefox/Chromium kiosk commands targeting the left monitor.
 - `--open-shared` (Right): Opens the suggestions folder in a file manager.
-- `--watch [USER]` (Left/Right): Opens live monitoring "watch" terminal on the physical side monitor.
-  - Left: system health, sensors, recent logs (with optional remote "User cursor: USER" label).
-  - Right: git status and recent commits (with optional remote "User cursor: USER" label).
-- Center convenience: `--watch-left [USER]` / `--watch-right [USER]`.
+- `--watch [USER]` (Left/Right): Opens the full side "persona screen" as a tmux split:
+  - Top pane: live watch (health/logs for Left; git for Right)
+  - Bottom pane: interactive chat box ("Left Grok" / "Right Grok" persona)
+  - Type `grok: your question` in the chat to post a query to Center Orchestrator Grok.
+  - Responses from Center are posted back to the log (user pastes or uses pcac_post_chat helper).
+  - Optional USER label for remote users ("User cursor: USER").
+  - Left/Right personas can physically view the Center monitor but have no control over it.
+- Center convenience:
+  - `--watch-left [USER]` / `--watch-right [USER]`: open the full side screens from orchestrator.
+  - `--view-chats`: tail both Left and Right chats in Center (orchestrator view).
+- `pcac_post_chat left/right "From" "message"` helper for Center to respond.
+- `pcac_view_all_chats` for Center overview.
 - `pcac_list_monitors` + friendly side → output mapping using kscreen-doctor + xrandr.
 - Everything logs + is reversible.
 
+## Three-Persona "PC into Three" Setup (Left Grok / Right Grok / Center Orchestrator Grok)
+The goal is to turn one physical PC + 3 monitors into three logical "computers"/personas:
+
+- **Left screen (DP-3)**: Left Grok persona. Runs full tmux (via `--watch` or `--watch-left`):
+  - Top: live health/logs watch.
+  - Bottom: interactive chat box. Type messages or `grok: your question to Center`.
+  - Can physically see Center monitor but has no control.
+- **Right screen (DP-2)**: Right Grok persona. Same structure (git watch + chat).
+- **Center screen (HDMI-A-1)**: Orchestrator Grok (you, running this Grok CLI).
+  - Use `--view-chats` or `pcac_view_all_chats` to see both logs live.
+  - Respond by posting e.g. `pcac_post_chat left "Center Grok (to Left)" "My response..."` or manually to the .log files.
+  - Controls everything: launchers, kiosk, services, etc.
+  - Left/Right "use Grok" by posting `grok:` queries in their chat; you (Center) reply into their log.
+
+**How to "chat as Left/Right"**:
+- On the side screen: run the chat (or use the bottom pane).
+- Type normal messages (they appear in log for Center to see).
+- Type `grok: tell me a chill suggestion for Right` — it flags as query to Center.
+- Center sees it (via --view-chats or tail), thinks, posts response back as "Center Grok (to Left): ...".
+- The side sees the response in their chat pane.
+
+**Remote users / cursors**: Pass `[USER]` e.g. `--watch-left alice` — appears as "User cursor: alice" everywhere + in titles.
+
+**Launching the full experience** (from Center):
+```bash
+./scripts/center-playground.sh --watch-left matt
+./scripts/center-playground.sh --watch-right remoteuser
+./scripts/center-playground.sh --view-chats   # keep this running or in another pane
+# Also launch other things: --start-suggestions, kiosk flows (which now auto-open watch+chat on Left)
+```
+
+The chat logs live in `shared/left-chat.log` and `right-chat.log` (gitignored, under /data).
+
+This keeps everything local, reversible, and under /data. The "three PCs" are monitor + persona + dedicated tools (kiosk on Left, games/media on Right, orchestrator on Center).
+
+See the launchers' --help for full options. Use `pcac_post_chat` etc from common.sh when in Center.
+
 ## Usage Examples
 ```bash
-# From Center (Grok CLI / orchestrator terminal)
+# From Center (Grok CLI / orchestrator terminal) - the "three PC" hub
 ./scripts/center-playground.sh --start-suggestions
 ./scripts/center-playground.sh --view-suggestions
-./scripts/center-playground.sh --watch-left          # opens health/logs watch on Left monitor
-./scripts/center-playground.sh --watch-right remote1 # opens git watch on Right with remote user label
+./scripts/center-playground.sh --watch-left          # full Left screen: watch + Left Grok chat box
+./scripts/center-playground.sh --watch-right remote1 # full Right screen: watch + Right Grok chat box (remote label)
+./scripts/center-playground.sh --view-chats          # tail both chats here in Center
+
+# In Left chat box (bottom pane of --watch-left): type
+#   grok: what do you think about cozy games for the Right side?
+# Center Grok (you here) responds by posting to the log (or using pcac_post_chat)
 
 # From Left side (once you switch to that monitor or via delegation)
 ./scripts/left-playground.sh --start-suggestions
-./scripts/left-playground.sh --kiosk          # shows the browser command for left monitor
-./scripts/left-playground.sh --watch          # opens/reopens the live health watch terminal
+./scripts/left-playground.sh --kiosk          # shows the browser command (now also opens watch+chat)
+./scripts/left-playground.sh --watch          # opens/reopens full Left tmux (watch top + chat bottom)
 
 # From Right
 ./scripts/right-playground.sh --view-suggestions
 ./scripts/right-playground.sh --open-shared
 ./scripts/right-playground.sh --watch matt    # with user cursor label
+
+# In any chat: 'grok: ...' posts query; Center responds by appending "Center Grok (to Left): ..."
+# Left/Right see Center monitor physically but can't control it.
 
 # Inspect monitors + mapping
 ./scripts/left-playground.sh --detect

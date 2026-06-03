@@ -24,9 +24,10 @@ Options:
   --kiosk              Launch (or show command for) a locked-down browser kiosk
                        on the left monitor pointing at the suggestion board.
                        Also automatically opens the health/logs watch terminal on Left.
-  --watch [USER]       Open (or re-open) the live system health & logs watch terminal
-                       on the left monitor (DP-3). Optional USER label for remote
-                       users (shows as "User cursor: USER" in the TUI)
+  --watch [USER]       Open (or re-open) the full Left screen on DP-3: tmux with
+                       health/logs watch (top pane) + interactive chat box (bottom).
+                       Use 'grok: ...' in chat to ask Center Grok. Optional USER label
+                       for remote users ("User cursor"). Left can see Center monitor.
 
 The suggestion board is a simple local web form. It writes to:
   $(pcac_suggestions_file)

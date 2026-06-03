@@ -43,6 +43,7 @@ pcac_ensure_dirs() {
   # Ensure the kiosk profile exists (for Left playground use).
   # Redirect stdout to avoid noise; creation log (if any) still goes via pcac_log.
   pcac_ensure_kiosk_profile >/dev/null
+  pcac_ensure_chats
 }
 
 pcac_log() {
@@ -177,6 +178,63 @@ pcac_suggestion_service_port() {
   echo "${PCAC_SUGGESTION_PORT:-8765}"
 }
 
+# --- Chat box support for three-persona setup (Left Grok, Right Grok, Center Orchestrator Grok) ---
+# Left and Right have separate chat logs.
+# Center (orchestrator) can view both.
+# Left/Right personas post messages; "grok: ..." indicates asking the center Grok.
+# User (orchestrator) responds by posting back to the appropriate log as "Center Grok (to Left): ..."
+# Left/Right can view Center monitor (physically) but have no control.
+# Supports optional user label for remote "cursors".
+
+PCAC_LEFT_CHAT_LOG="${PCAC_SHARED_DIR}/left-chat.log"
+PCAC_RIGHT_CHAT_LOG="${PCAC_SHARED_DIR}/right-chat.log"
+
+export PCAC_LEFT_CHAT_LOG PCAC_RIGHT_CHAT_LOG
+
+pcac_ensure_chats() {
+  mkdir -p "$(dirname "$PCAC_LEFT_CHAT_LOG")"
+  touch "$PCAC_LEFT_CHAT_LOG" "$PCAC_RIGHT_CHAT_LOG"
+}
+
+pcac_post_chat() {
+  local side="$1"  # left or right
+  local from="$2"
+  local msg="$3"
+  local log_file
+  if [[ "$side" == "left" ]]; then
+    log_file="$PCAC_LEFT_CHAT_LOG"
+  else
+    log_file="$PCAC_RIGHT_CHAT_LOG"
+  fi
+  echo "[$(date '+%H:%M:%S')] ${from}: ${msg}" >> "$log_file"
+  pcac_log INFO "Posted to ${side}-chat as ${from}: ${msg}"
+}
+
+pcac_view_chat() {
+  local side="$1"
+  local log_file
+  if [[ "$side" == "left" ]]; then
+    log_file="$PCAC_LEFT_CHAT_LOG"
+  else
+    log_file="$PCAC_RIGHT_CHAT_LOG"
+  fi
+  pcac_ensure_chats
+  echo "=== ${side^^} CHAT LOG (tail -50) ==="
+  tail -50 "$log_file" 2>/dev/null || echo "(empty)"
+}
+
+pcac_view_all_chats() {
+  echo "=== CENTER ORCHESTRATOR VIEW: BOTH CHATS ==="
+  echo
+  echo "--- LEFT CHAT ---"
+  tail -30 "$PCAC_LEFT_CHAT_LOG" 2>/dev/null || echo "(empty)"
+  echo
+  echo "--- RIGHT CHAT ---"
+  tail -30 "$PCAC_RIGHT_CHAT_LOG" 2>/dev/null || echo "(empty)"
+  echo
+  echo "(Center Grok: post responses using pcac_post_chat left 'Center Grok (to Left)' 'your response' or edit logs directly)"
+}
+
 # --- Watch terminal openers for side monitors ---
 # These launch a konsole (KDE terminal) positioned on the target physical monitor
 # using --qwindowgeometry (X11 geometry syntax). This provides the "live monitoring
@@ -188,41 +246,46 @@ pcac_suggestion_service_port() {
 
 pcac_open_watch_left() {
   local user_label="${1:-$(whoami)}"
-  local script="${PCAC_ROOT}/scripts/left-watch.sh"
+  local tmux_script="${PCAC_ROOT}/scripts/left-tmux.sh"
   local geom="1920x1080+0+0"   # Left monitor (DP-3): 0,0 origin, 1920 wide
-  local title="PCaC-Left-Watch-${user_label}"
+  local title="PCaC-Left-Screen-${user_label}"  # now includes watch + chat
 
-  if [[ ! -x "$script" ]]; then
-    pcac_log ERROR "Watch script not found or not executable: $script"
+  if [[ ! -x "$tmux_script" ]]; then
+    pcac_log ERROR "tmux launcher not found: $tmux_script"
     return 1
   fi
 
-  # Launch konsole on the left monitor geometry, pass user_label for "cursor" label in TUI
-  konsole --qwindowgeometry "$geom" --title "$title" --hold -e "$script" "$user_label" &
+  # Launch konsole on Left geometry running the combined watch+chat tmux session.
+  # This gives Left its own "terminal" with monitoring + separate chat box for using Grok (Left Grok persona).
+  konsole --qwindowgeometry "$geom" --title "$title" -e "$tmux_script" "$user_label" &
   local pid=$!
-  pcac_log INFO "Opened Left Watch terminal on DP-3 (geom $geom, user=$user_label, pid $pid)"
-  echo "  Title: $title"
+  pcac_log INFO "Opened Left combined screen (watch + chat) on DP-3 (geom $geom, user=$user_label, pid $pid)"
+  echo "  Title: $title (tmux: watch top, chat bottom - Ctrl-b arrows to switch)"
   echo "  User cursor label: $user_label"
-  echo "  To close: close the konsole window or kill $pid"
+  echo "  In chat: type 'grok: ...' to ask Center Grok. Responses posted back from Center."
+  echo "  To close: exit tmux (Ctrl-b d or type quit in chat) or kill $pid"
 }
 
 pcac_open_watch_right() {
   local user_label="${1:-$(whoami)}"
-  local script="${PCAC_ROOT}/scripts/right-watch.sh"
+  local tmux_script="${PCAC_ROOT}/scripts/right-tmux.sh"
   local geom="1920x1080+3840+0"  # Right monitor (DP-2): starts at x=3840
-  local title="PCaC-Right-Watch-${user_label}"
+  local title="PCaC-Right-Screen-${user_label}"  # now includes watch + chat
 
-  if [[ ! -x "$script" ]]; then
-    pcac_log ERROR "Watch script not found or not executable: $script"
+  if [[ ! -x "$tmux_script" ]]; then
+    pcac_log ERROR "tmux launcher not found: $tmux_script"
     return 1
   fi
 
-  konsole --qwindowgeometry "$geom" --title "$title" --hold -e "$script" "$user_label" &
+  # Launch konsole on Right geometry running the combined watch+chat tmux session.
+  # This gives Right its own "terminal" with monitoring + separate chat box for using Grok (Right Grok persona).
+  konsole --qwindowgeometry "$geom" --title "$title" -e "$tmux_script" "$user_label" &
   local pid=$!
-  pcac_log INFO "Opened Right Watch terminal on DP-2 (geom $geom, user=$user_label, pid $pid)"
-  echo "  Title: $title"
+  pcac_log INFO "Opened Right combined screen (watch + chat) on DP-2 (geom $geom, user=$user_label, pid $pid)"
+  echo "  Title: $title (tmux: watch top, chat bottom - Ctrl-b arrows to switch)"
   echo "  User cursor label: $user_label"
-  echo "  To close: close the konsole window or kill $pid"
+  echo "  In chat: type 'grok: ...' to ask Center Grok. Responses posted back from Center."
+  echo "  To close: exit tmux (Ctrl-b d or type quit in chat) or kill $pid"
 }
 
 # --- Kiosk profile helpers (for locked-down Left browser) ---

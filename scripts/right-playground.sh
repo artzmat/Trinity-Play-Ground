@@ -21,9 +21,10 @@ Options:
   --dry-run            (default) Show plan only
   --view-suggestions   View the shared suggestion board written by Left
   --open-shared        Open a file browser / terminal on the shared suggestions folder
-  --watch [USER]       Open (or re-open) the live git status & commits watch terminal
-                       on the right monitor (DP-2). Optional USER label for remote
-                       users (shows as "User cursor: USER" in the TUI)
+  --watch [USER]       Open (or re-open) the full Right screen on DP-2: tmux with
+                       git watch (top pane) + interactive chat box (bottom).
+                       Use 'grok: ...' in chat to ask Center Grok. Optional USER label
+                       for remote users ("User cursor"). Right can see Center monitor.
 
 Expansion points for Grok Center:
   - Gaming session launcher (Steam Big Picture, Lutris, etc. on right output)
