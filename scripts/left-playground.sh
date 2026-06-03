@@ -23,6 +23,9 @@ Options:
   --view-suggestions   Show current suggestions from the shared board
   --kiosk              Launch (or show command for) a locked-down browser kiosk
                        on the left monitor pointing at the suggestion board
+  --watch [USER]       Open (or re-open) the live system health & logs watch terminal
+                       on the left monitor (DP-3). Optional USER label for remote
+                       users (shows as "User cursor: USER" in the TUI)
 
 The suggestion board is a simple local web form. It writes to:
   $(pcac_suggestions_file)
@@ -41,6 +44,8 @@ main() {
   local do_start_suggestions=false
   local do_view=false
   local do_kiosk=false
+  local do_watch=false
+  local watch_user=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -67,6 +72,15 @@ main() {
       --kiosk)
         do_kiosk=true
         shift
+        ;;
+      --watch)
+        do_watch=true
+        shift
+        # optional next arg as user label
+        if [[ $# -gt 0 && "$1" != --* ]]; then
+          watch_user="$1"
+          shift
+        fi
         ;;
       *)
         pcac_log WARN "Unknown argument: $1"
@@ -140,6 +154,14 @@ firefox \\
 # For full automation later we can integrate kdotool / ydotool / KWin scripting.
 
 KIOSK
+  fi
+
+  if $do_watch; then
+    if [[ -n "$watch_user" ]]; then
+      pcac_open_watch_left "$watch_user"
+    else
+      pcac_open_watch_left
+    fi
   fi
 
   # === EXPANSION POINTS (Grok will fill these in over time) ===

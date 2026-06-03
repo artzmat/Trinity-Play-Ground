@@ -21,6 +21,9 @@ Options:
   --dry-run            (default) Show plan only
   --view-suggestions   View the shared suggestion board written by Left
   --open-shared        Open a file browser / terminal on the shared suggestions folder
+  --watch [USER]       Open (or re-open) the live git status & commits watch terminal
+                       on the right monitor (DP-2). Optional USER label for remote
+                       users (shows as "User cursor: USER" in the TUI)
 
 Expansion points for Grok Center:
   - Gaming session launcher (Steam Big Picture, Lutris, etc. on right output)
@@ -36,6 +39,8 @@ main() {
   local mode="run"
   local do_view=false
   local do_open_shared=false
+  local do_watch=false
+  local watch_user=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -58,6 +63,14 @@ main() {
       --open-shared)
         do_open_shared=true
         shift
+        ;;
+      --watch)
+        do_watch=true
+        shift
+        if [[ $# -gt 0 && "$1" != --* ]]; then
+          watch_user="$1"
+          shift
+        fi
         ;;
       *)
         pcac_log WARN "Unknown argument: $1"
@@ -98,6 +111,14 @@ main() {
     else
       ls -l "$shared/suggestions"
       pcac_log INFO "Use your favorite file manager or: cd $shared/suggestions"
+    fi
+  fi
+
+  if $do_watch; then
+    if [[ -n "$watch_user" ]]; then
+      pcac_open_watch_right "$watch_user"
+    else
+      pcac_open_watch_right
     fi
   fi
 
