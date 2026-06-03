@@ -22,7 +22,8 @@ Options:
   --start-suggestions  Start the local suggestion web service (background)
   --view-suggestions   Show current suggestions from the shared board
   --kiosk              Launch (or show command for) a locked-down browser kiosk
-                       on the left monitor pointing at the suggestion board
+                       on the left monitor pointing at the suggestion board.
+                       Also automatically opens the health/logs watch terminal on Left.
   --watch [USER]       Open (or re-open) the live system health & logs watch terminal
                        on the left monitor (DP-3). Optional USER label for remote
                        users (shows as "User cursor: USER" in the TUI)
@@ -154,6 +155,11 @@ firefox \\
 # For full automation later we can integrate kdotool / ydotool / KWin scripting.
 
 KIOSK
+
+    # Micro-step integration: when launching kiosk on Left, also open the health/logs watch
+    # (so the chill layer has live monitoring visible on the same monitor).
+    pcac_log INFO "Also opening Left watch terminal (system health + logs) alongside kiosk"
+    pcac_open_watch_left
   fi
 
   if $do_watch; then
@@ -175,7 +181,7 @@ KIOSK
   pcac_log INFO "Next steps will be added here (browser kiosk, local web service, VM launch, etc.)"
 
   if [[ "$mode" == "dry" || "$mode" == "run" ]]; then
-    pcac_log INFO "(placeholder / dry-run mode — use --start-suggestions or --kiosk to try real pieces)"
+    pcac_log INFO "(placeholder / dry-run mode — use --start-suggestions, --kiosk (also opens watch), or --watch to try real pieces)"
   fi
 
   pcac_log INFO "Left playground launcher complete."
