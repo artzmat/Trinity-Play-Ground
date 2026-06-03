@@ -177,6 +177,50 @@ pcac_suggestion_service_port() {
   echo "${PCAC_SUGGESTION_PORT:-8765}"
 }
 
+# --- Watch terminal openers for side monitors ---
+# These launch a konsole (KDE terminal) positioned on the target physical monitor
+# using --qwindowgeometry (X11 geometry syntax). This provides the "live monitoring
+# terminals" on Left (health/logs) and Right (git status/commits).
+#
+# The watch scripts themselves are safe, local, read-only viewers.
+# They can be launched manually too: ./scripts/left-watch.sh inside a terminal
+# on the correct monitor.
+
+pcac_open_watch_left() {
+  local script="${PCAC_ROOT}/scripts/left-watch.sh"
+  local geom="1920x1080+0+0"   # Left monitor (DP-3): 0,0 origin, 1920 wide
+  local title="PCaC-Left-Watch"
+
+  if [[ ! -x "$script" ]]; then
+    pcac_log ERROR "Watch script not found or not executable: $script"
+    return 1
+  fi
+
+  # Launch konsole on the left monitor geometry, run the watch script, hold open
+  konsole --qwindowgeometry "$geom" --title "$title" --hold -e "$script" &
+  local pid=$!
+  pcac_log INFO "Opened Left Watch terminal on DP-3 (geom $geom, pid $pid)"
+  echo "  Title: $title"
+  echo "  To close: close the konsole window or kill $pid"
+}
+
+pcac_open_watch_right() {
+  local script="${PCAC_ROOT}/scripts/right-watch.sh"
+  local geom="1920x1080+3840+0"  # Right monitor (DP-2): starts at x=3840
+  local title="PCaC-Right-Watch"
+
+  if [[ ! -x "$script" ]]; then
+    pcac_log ERROR "Watch script not found or not executable: $script"
+    return 1
+  fi
+
+  konsole --qwindowgeometry "$geom" --title "$title" --hold -e "$script" &
+  local pid=$!
+  pcac_log INFO "Opened Right Watch terminal on DP-2 (geom $geom, pid $pid)"
+  echo "  Title: $title"
+  echo "  To close: close the konsole window or kill $pid"
+}
+
 # --- Kiosk profile helpers (for locked-down Left browser) ---
 # These create and manage a dedicated, privacy-hardened Firefox profile
 # stored under shared/ (so it lives on /data and is gitignored).
