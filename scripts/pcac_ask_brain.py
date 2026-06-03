@@ -48,7 +48,12 @@ def api_base(cfg: dict[str, str]) -> str:
     ).rstrip("/")
 
 
-def resolve_model_id(base: str, cfg: dict[str, str]) -> str:
+def resolve_model_id(side: str, base: str, cfg: dict[str, str]) -> str:
+    side_key = f"LMSTUDIO_MODEL_{side.upper()}"
+    if os.environ.get(f"PCAC_LM_MODEL_{side.upper()}"):
+        return os.environ[f"PCAC_LM_MODEL_{side.upper()}"]
+    if cfg.get(side_key):
+        return cfg[side_key]
     if os.environ.get("PCAC_LM_MODEL"):
         return os.environ["PCAC_LM_MODEL"]
     if cfg.get("LMSTUDIO_MODEL"):
@@ -159,7 +164,7 @@ def main() -> int:
         system_block += "\n\n---\n\n# Persistent memory\n\n" + memory
 
     try:
-        model = resolve_model_id(base, cfg)
+        model = resolve_model_id(side, base, cfg)
         reply = chat_completion(base, model, system_block, user_msg, api_key, max_tokens)
     except Exception as e:
         err = f"[{brain_name} offline] {e}"
