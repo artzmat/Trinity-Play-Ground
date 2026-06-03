@@ -15,9 +15,16 @@ else
   PCAC_LOG_DIR="${PCAC_LOG_DIR:-/data/var/log/pcac}"
 fi
 
+# Optional user label for remote users / multi-user "cursor" distinction
+USER_LABEL="${1:-$(whoami)}"
+if [[ "$USER_LABEL" != "$(whoami)" ]]; then
+  echo "Running as remote user label: $USER_LABEL"
+fi
+
 echo "=== PCaC Left Watch starting on $(hostname) ==="
 echo "Monitoring: system health + recent logs"
 echo "Log dir: $PCAC_LOG_DIR"
+echo "User cursor: $USER_LABEL"
 echo "Press Ctrl-C to stop this watch."
 echo
 
@@ -25,6 +32,7 @@ echo
 exec watch -n 2 -t "
 echo '=== PCaC LEFT MONITOR - System Health & Logs ==='
 date '+%Y-%m-%d %H:%M:%S'
+echo "User cursor: $USER_LABEL"
 echo
 echo '=== Uptime / Load ==='
 uptime

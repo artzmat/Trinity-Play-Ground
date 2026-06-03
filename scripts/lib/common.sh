@@ -187,37 +187,41 @@ pcac_suggestion_service_port() {
 # on the correct monitor.
 
 pcac_open_watch_left() {
+  local user_label="${1:-$(whoami)}"
   local script="${PCAC_ROOT}/scripts/left-watch.sh"
   local geom="1920x1080+0+0"   # Left monitor (DP-3): 0,0 origin, 1920 wide
-  local title="PCaC-Left-Watch"
+  local title="PCaC-Left-Watch-${user_label}"
 
   if [[ ! -x "$script" ]]; then
     pcac_log ERROR "Watch script not found or not executable: $script"
     return 1
   fi
 
-  # Launch konsole on the left monitor geometry, run the watch script, hold open
-  konsole --qwindowgeometry "$geom" --title "$title" --hold -e "$script" &
+  # Launch konsole on the left monitor geometry, pass user_label for "cursor" label in TUI
+  konsole --qwindowgeometry "$geom" --title "$title" --hold -e "$script" "$user_label" &
   local pid=$!
-  pcac_log INFO "Opened Left Watch terminal on DP-3 (geom $geom, pid $pid)"
+  pcac_log INFO "Opened Left Watch terminal on DP-3 (geom $geom, user=$user_label, pid $pid)"
   echo "  Title: $title"
+  echo "  User cursor label: $user_label"
   echo "  To close: close the konsole window or kill $pid"
 }
 
 pcac_open_watch_right() {
+  local user_label="${1:-$(whoami)}"
   local script="${PCAC_ROOT}/scripts/right-watch.sh"
   local geom="1920x1080+3840+0"  # Right monitor (DP-2): starts at x=3840
-  local title="PCaC-Right-Watch"
+  local title="PCaC-Right-Watch-${user_label}"
 
   if [[ ! -x "$script" ]]; then
     pcac_log ERROR "Watch script not found or not executable: $script"
     return 1
   fi
 
-  konsole --qwindowgeometry "$geom" --title "$title" --hold -e "$script" &
+  konsole --qwindowgeometry "$geom" --title "$title" --hold -e "$script" "$user_label" &
   local pid=$!
-  pcac_log INFO "Opened Right Watch terminal on DP-2 (geom $geom, pid $pid)"
+  pcac_log INFO "Opened Right Watch terminal on DP-2 (geom $geom, user=$user_label, pid $pid)"
   echo "  Title: $title"
+  echo "  User cursor label: $user_label"
   echo "  To close: close the konsole window or kill $pid"
 }
 

@@ -9,8 +9,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Optional user label for remote users / multi-user "cursor" distinction
+USER_LABEL="${1:-$(whoami)}"
+if [[ "$USER_LABEL" != "$(whoami)" ]]; then
+  echo "Running as remote user label: $USER_LABEL"
+fi
+
 echo "=== PCaC Right Watch starting ==="
 echo "Repo: $REPO_DIR"
+echo "User cursor: $USER_LABEL"
 echo "Press Ctrl-C to stop this watch."
 echo
 
@@ -18,6 +25,7 @@ echo
 exec watch -n 5 -t "
 echo '=== PCaC RIGHT MONITOR - Git Status & Commits ==='
 date '+%Y-%m-%d %H:%M:%S'
+echo "User cursor: $USER_LABEL"
 echo
 cd \"$REPO_DIR\"
 echo '=== Git Status ==='
