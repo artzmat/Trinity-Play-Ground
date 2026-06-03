@@ -27,6 +27,8 @@ Options:
   --launch-right       Also invoke right-playground.sh (with its defaults)
   --start-suggestions  Start the shared local suggestion web service (via left)
   --view-suggestions   Show suggestions from the shared board
+  --watch-left [USER]  Open live health/logs watch terminal on Left monitor (with optional remote user cursor label)
+  --watch-right [USER] Open live git watch terminal on Right monitor (with optional remote user cursor label)
 
 The suggestion board (simple Python + HTML) is the first real shared feature:
   Left  → can submit via kiosk form
@@ -64,6 +66,10 @@ main() {
   local do_right=false
   local do_start_suggestions=false
   local do_view=false
+  local do_watch_left=false
+  local do_watch_right=false
+  local watch_left_user=""
+  local watch_right_user=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -94,6 +100,22 @@ main() {
       --view-suggestions)
         do_view=true
         shift
+        ;;
+      --watch-left)
+        do_watch_left=true
+        shift
+        if [[ $# -gt 0 && "$1" != --* ]]; then
+          watch_left_user="$1"
+          shift
+        fi
+        ;;
+      --watch-right)
+        do_watch_right=true
+        shift
+        if [[ $# -gt 0 && "$1" != --* ]]; then
+          watch_right_user="$1"
+          shift
+        fi
         ;;
       *)
         pcac_log WARN "Unknown argument: $1"
@@ -133,6 +155,21 @@ main() {
   fi
   if $do_view; then
     view_suggestions_from_center
+  fi
+
+  if $do_watch_left; then
+    if [[ -n "$watch_left_user" ]]; then
+      "${PCAC_ROOT}/scripts/left-playground.sh" --watch "$watch_left_user"
+    else
+      "${PCAC_ROOT}/scripts/left-playground.sh" --watch
+    fi
+  fi
+  if $do_watch_right; then
+    if [[ -n "$watch_right_user" ]]; then
+      "${PCAC_ROOT}/scripts/right-playground.sh" --watch "$watch_right_user"
+    else
+      "${PCAC_ROOT}/scripts/right-playground.sh" --watch
+    fi
   fi
 
   if $do_left; then
