@@ -31,7 +31,7 @@ Options:
                        'grok: ...' in chat to query Center. Supports remote user labels.
   --watch-right [USER] Open full Right screen (DP-2): tmux watch (git) + chat box for Right Grok persona.
                        'grok: ...' in chat to query Center. Supports remote user labels.
-  --view-chats         View/tail both Left and Right chats from Center (orchestrator view).
+  --view-chats         Open dedicated Center monitor terminal (tmux split) to see both Left and Right chats live. (The 'Center terminal to see both'.)
 
 The suggestion board (simple Python + HTML) is the first real shared feature:
   Left  → can submit via kiosk form
@@ -181,7 +181,8 @@ main() {
   fi
 
   if $do_view_chats; then
-    "${PCAC_ROOT}/scripts/center-chat-view.sh"
+    # Launch the nice dedicated Center terminal (konsole on center geom + tmux split for both)
+    "$PCAC_ROOT/grok-center"
   fi
 
   if $do_left; then
