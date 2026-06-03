@@ -1,0 +1,45 @@
+# VM / libvirt images and metadata (we keep only XML exports here)
+*.qcow2
+*.img
+*.raw
+var/
+run/
+tmp/
+
+# Docker / container artifacts
+docker-compose.override.yml
+.docker/
+
+# Python / general
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs and local env
+*.log
+.env
+.env.local
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
