@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# grok-right [optional-user-label]
+# Launches/attaches the Right Grok persona terminal (watch + chat tmux on Right monitor)
+# Part of PCaC three-persona setup: Left Grok, Right Grok, Center Orchestrator Grok.
+
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$REPO_DIR"
+
+USER_LABEL="${1:-$(whoami)}"
+
+echo "Starting Right Grok persona for user: $USER_LABEL"
+echo "This will open a konsole on the Right monitor with tmux (watch top, chat bottom)."
+echo "In chat: type 'grok: your message' to query the Center Orchestrator Grok."
+echo "Right personas can see the Center monitor but have no control."
+
+exec ./scripts/right-tmux.sh "$USER_LABEL"
