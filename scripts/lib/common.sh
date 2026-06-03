@@ -246,6 +246,16 @@ pcac_tail_bus() {
   python3 "${PCAC_ROOT}/scripts/pcac_bus.py" tail -n "$n" 2>/dev/null || echo "(bus empty)"
 }
 
+# Center posts a response into a side chat log + bus
+pcac_center_reply() {
+  local side="$1"
+  local msg="$2"
+  local label="Center Grok (to ${side^})"
+  pcac_post_chat "$side" "$label" "$msg" "center_reply"
+  pcac_bus_append "$label" "$side" "center_reply" "$msg"
+  pcac_log INFO "Center replied to ${side}: ${msg}"
+}
+
 pcac_view_chat() {
   local side="$1"
   local log_file
@@ -329,7 +339,7 @@ pcac_open_watch_left() {
   pcac_log INFO "Opened Left combined screen (watch + chat) on DP-3 (geom $geom, user=$user_label, pid $pid)"
   echo "  Title: $title (tmux: watch top, chat bottom - Ctrl-b arrows to switch)"
   echo "  User cursor label: $user_label"
-  echo "  In chat: type 'grok: ...' to ask Center Grok. Responses posted back from Center."
+  echo "  In chat: grok: → Center | ask: → local brain. Center: pcac_center_reply left|right '...'"
   echo "  To close: exit tmux (Ctrl-b d or type quit in chat) or kill $pid"
 }
 
@@ -351,7 +361,7 @@ pcac_open_watch_right() {
   pcac_log INFO "Opened Right combined screen (watch + chat) on DP-2 (geom $geom, user=$user_label, pid $pid)"
   echo "  Title: $title (tmux: watch top, chat bottom - Ctrl-b arrows to switch)"
   echo "  User cursor label: $user_label"
-  echo "  In chat: type 'grok: ...' to ask Center Grok. Responses posted back from Center."
+  echo "  In chat: grok: → Center | ask: → local brain. Center: pcac_center_reply left|right '...'"
   echo "  To close: exit tmux (Ctrl-b d or type quit in chat) or kill $pid"
 }
 

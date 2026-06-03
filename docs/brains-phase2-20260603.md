@@ -51,7 +51,17 @@ pcac_tail_bus 20
 
 LM Studio **local server** must be running with the Qwen GGUF loaded. Until then, `ask:` posts an offline message to the side chat log.
 
+## Center tools (2b)
+
+| Script | Purpose |
+|--------|---------|
+| `center-bus-watch.sh` | Live bus tail in Center tmux (highlights `grok_query`) |
+| `pcac-grok-inbox.sh` | List pending Center queries from bus |
+| `pcac_center_reply` | In `common.sh`: `pcac_center_reply left\|right "text"` |
+
+Center tmux bottom pane now runs `center-bus-watch.sh` instead of static uptime.
+
 ## Next
 
-- **go 2b** (optional): Center script to auto-reply to `grok_query` bus lines
+- Start LM Studio local server for live `ask:` replies
 - Eye tracking hooks in Right `MEMORY.md` when ready

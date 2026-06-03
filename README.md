@@ -61,7 +61,8 @@ Shared playground data (suggestions etc.) → `shared/` (inside repo for conveni
 - Center convenience:
   - `--watch-left [USER]` / `--watch-right [USER]`: open the full side screens from orchestrator.
   - `--view-chats`: tail both Left and Right chats in Center (orchestrator view).
-- `pcac_post_chat left/right "From" "message"` helper for Center to respond.
+- `pcac_post_chat left/right "From" "message"` or `pcac_center_reply left|right "message"` for Center.
+- `pcac-grok-inbox` / `center-bus-watch.sh` — Center sees `grok:` queries on the bus.
 - `pcac_view_all_chats` for Center overview.
 - `pcac_list_monitors` + friendly side → output mapping using kscreen-doctor + xrandr.
 - Everything logs + is reversible.
