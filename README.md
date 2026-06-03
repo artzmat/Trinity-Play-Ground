@@ -74,7 +74,7 @@ Distinct personalities live under `personas/`:
 - **Right-Brain** (`personas/right-brain/`) — creative, options-oriented, play/media
 - **Center** (`personas/center/MEMORY.md`) — orchestrator notes in repo
 
-Local LM Studio will load these as system context in Phase 2 (`ask:` in side chats). Until then, edit `MEMORY.md` by hand and use `grok:` for Center.
+Local LM Studio loads persona prompts on **`ask:`** in side chats (Phase 2). Use **`grok:`** for Center orchestrator. Machine-readable bus: `shared/bus/messages.jsonl` (dual-written with chat logs). See `docs/brains-phase2-20260603.md`.
 
 See `docs/brains-audit-20260603.md` and `docs/brains-phase1a-20260603.md` for storage setup on `/data/AI`.
 
@@ -96,7 +96,8 @@ The goal is to turn one physical PC + 3 monitors into three logical "computers"/
 **How to "chat as Left/Right"**:
 - On the side screen: run the chat (or use the bottom pane).
 - Type normal messages (they appear in log for Center to see).
-- Type `grok: tell me a chill suggestion for Right` — it flags as query to Center.
+- Type `grok: tell me a chill suggestion for Right` — query to Center (bus + log).
+- Type `ask: what should I prioritize today?` — local Left/Right brain (LM Studio + personas).
 - Center sees it (via --view-chats or tail), thinks, posts response back as "Center Grok (to Left): ...".
 - The side sees the response in their chat pane.
 

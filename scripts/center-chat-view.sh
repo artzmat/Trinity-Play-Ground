@@ -20,11 +20,12 @@ fi
 pcac_ensure_chats
 
 echo "=== CENTER ORCHESTRATOR CHAT VIEW ==="
-echo "Watching Left and Right chats. Press Ctrl-C to exit."
-echo "To respond: use pcac_post_chat left 'Center Grok (to Left)' 'response text'"
-echo "Or: echo '[$(date +%H:%M:%S)] Center Grok (to Left): your text' >> $PCAC_LEFT_CHAT_LOG"
-echo "Same for right."
+echo "Watching Left and Right chats + bus (JSONL). Press Ctrl-C to exit."
+echo "Respond: pcac_post_chat left 'Center Grok (to Left)' 'text'"
+echo "Bus tail: pcac_tail_bus 20   file: $PCAC_BUS_FILE"
 echo "=========================================="
+pcac_tail_bus 8 2>/dev/null || true
+echo "------------------------------------------"
 
 # Use multitail if available, else simple loop with two tails
 if command -v multitail >/dev/null 2>&1; then

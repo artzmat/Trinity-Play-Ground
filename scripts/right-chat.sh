@@ -30,7 +30,8 @@ show_chat() {
   echo "╚════════════════════════════════════════════════════════════╝"
   echo "This is the separate chat for Right. Center Orchestrator Grok sees this."
   echo "You (Right) can view the Center monitor but have no control over it."
-  echo "Type 'grok: your message or question' to ask the Center Grok."
+  echo "Type 'grok: ...' to ask Center Orchestrator (cloud Grok)."
+  echo "Type 'ask: ...' to ask Right-Brain (local LM Studio, when server is up)."
   echo "Type 'quit' or Ctrl-C to exit. 'clear' to refresh."
   echo "--------------------------------------------------------------"
   echo "Recent messages:"
@@ -57,11 +58,22 @@ while true; do
       continue
       ;;
     grok:*|Grok:*)
-      # Special: asking Grok (center will respond by posting back)
       msg="${input#*:}"
       msg=$(echo "$msg" | xargs)
       pcac_post_chat right "Right Grok ($USER_LABEL)" "grok: $msg"
-      echo "[$(date '+%H:%M:%S')] [Query sent to Center Grok - check Center monitor for response]"
+      echo "[$(date '+%H:%M:%S')] [Query sent to Center — check Center monitor]"
+      sleep 1
+      show_chat
+      ;;
+    ask:*|Ask:*)
+      msg="${input#*:}"
+      msg=$(echo "$msg" | xargs)
+      echo "[$(date '+%H:%M:%S')] Right-Brain thinking..."
+      if pcac_ask_brain right "$msg" "$USER_LABEL"; then
+        echo "[$(date '+%H:%M:%S')] Right-Brain replied (see chat log)"
+      else
+        echo "[$(date '+%H:%M:%S')] Right-Brain unavailable — start LM Studio server (:1234)"
+      fi
       sleep 1
       show_chat
       ;;

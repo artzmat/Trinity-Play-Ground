@@ -188,26 +188,62 @@ pcac_suggestion_service_port() {
 
 PCAC_LEFT_CHAT_LOG="${PCAC_SHARED_DIR}/left-chat.log"
 PCAC_RIGHT_CHAT_LOG="${PCAC_SHARED_DIR}/right-chat.log"
+PCAC_BUS_FILE="${PCAC_SHARED_DIR}/bus/messages.jsonl"
 
-export PCAC_LEFT_CHAT_LOG PCAC_RIGHT_CHAT_LOG
+export PCAC_LEFT_CHAT_LOG PCAC_RIGHT_CHAT_LOG PCAC_BUS_FILE
 
 pcac_ensure_chats() {
   mkdir -p "$(dirname "$PCAC_LEFT_CHAT_LOG")"
-  touch "$PCAC_LEFT_CHAT_LOG" "$PCAC_RIGHT_CHAT_LOG"
+  mkdir -p "$(dirname "$PCAC_BUS_FILE")"
+  touch "$PCAC_LEFT_CHAT_LOG" "$PCAC_RIGHT_CHAT_LOG" "$PCAC_BUS_FILE"
+}
+
+pcac_bus_append() {
+  local from="$1"
+  local to="$2"
+  local kind="${3:-chat}"
+  local text="$4"
+  pcac_ensure_chats
+  python3 "${PCAC_ROOT}/scripts/pcac_bus.py" append \
+    --from "$from" --to "$to" --kind "$kind" --text "$text" 2>/dev/null \
+    || pcac_log WARN "bus append failed (is python3 available?)"
 }
 
 pcac_post_chat() {
   local side="$1"  # left or right
   local from="$2"
   local msg="$3"
+  local kind="${4:-chat}"
   local log_file
+  local bus_to="center"
   if [[ "$side" == "left" ]]; then
     log_file="$PCAC_LEFT_CHAT_LOG"
+    bus_to="left"
   else
     log_file="$PCAC_RIGHT_CHAT_LOG"
+    bus_to="right"
+  fi
+  # grok: queries are addressed to Center orchestrator
+  if [[ "$msg" == grok:* ]]; then
+    kind="grok_query"
+    bus_to="center"
   fi
   echo "[$(date '+%H:%M:%S')] ${from}: ${msg}" >> "$log_file"
+  pcac_bus_append "$from" "$bus_to" "$kind" "$msg"
   pcac_log INFO "Posted to ${side}-chat as ${from}: ${msg}"
+}
+
+pcac_ask_brain() {
+  local side="$1"
+  local msg="$2"
+  local user_label="${3:-$(whoami)}"
+  python3 "${PCAC_ROOT}/scripts/pcac_ask_brain.py" "$side" "$msg" "$user_label"
+}
+
+pcac_tail_bus() {
+  local n="${1:-15}"
+  pcac_ensure_chats
+  python3 "${PCAC_ROOT}/scripts/pcac_bus.py" tail -n "$n" 2>/dev/null || echo "(bus empty)"
 }
 
 pcac_view_chat() {
@@ -232,7 +268,10 @@ pcac_view_all_chats() {
   echo "--- RIGHT CHAT ---"
   tail -30 "$PCAC_RIGHT_CHAT_LOG" 2>/dev/null || echo "(empty)"
   echo
-  echo "(Center Grok: post responses using pcac_post_chat left 'Center Grok (to Left)' 'your response' or edit logs directly)"
+  echo "--- BUS (last 10) ---"
+  pcac_tail_bus 10
+  echo
+  echo "(Center: pcac_post_chat left|right 'Center Grok (...)' 'message')"
 }
 
 # Sudo helper using the user's sudo code pin for auto updates/testing
