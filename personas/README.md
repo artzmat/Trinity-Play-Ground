@@ -26,8 +26,10 @@ personas/
 
 ## Editing memory
 
-- Add short, factual bullets to `MEMORY.md` (preferences, constraints, running jokes).
+- **Append-only:** add bullets; do not rewrite history in `MEMORY.md`.
+- Add short, factual lines (preferences, system state, creative threads).
 - Center may copy summaries into side memory after orchestration sessions.
+- Both sides: **propose only** — Center approves system-level changes.
 - Do not store secrets (passwords, API keys) here.
 
 ## Monitors

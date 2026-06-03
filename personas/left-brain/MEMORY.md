@@ -1,6 +1,6 @@
 # Left-Brain — persistent memory
 
-Append short facts the Left persona should remember across sessions.  
+**Append-only.** Add new bullets; avoid rewriting history. Keep entries short (one line each).  
 Edit by hand or ask Center to add a bullet after a decision.
 
 ## User preferences
@@ -12,6 +12,7 @@ Edit by hand or ask Center to add a bullet after a decision.
 - Models target directory: `/data/AI/models`
 - LM Studio state: `~/.lmstudio` → `/data/AI/lmstudio`
 - Suggestion board: `http://127.0.0.1:8765` (when service running)
+- SearxNG: needs localhost-only fix (per PC-Stuff snapshot)
 
 ## Running context
 
