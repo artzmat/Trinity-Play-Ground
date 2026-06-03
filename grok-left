@@ -5,14 +5,10 @@
 
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$REPO_DIR"
+REPO_DIR="/data/PCaC-Playgrounds"
+source "$REPO_DIR/scripts/lib/common.sh"
 
 USER_LABEL="${1:-$(whoami)}"
 
 echo "Starting Left Grok persona for user: $USER_LABEL"
-echo "This will open a konsole on the Left monitor with tmux (watch top, chat bottom)."
-echo "In chat: type 'grok: your message' to query the Center Orchestrator Grok."
-echo "Left personas can see the Center monitor but have no control."
-
-exec ./scripts/left-tmux.sh "$USER_LABEL"
+pcac_open_watch_left "$USER_LABEL"
