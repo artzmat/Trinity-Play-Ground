@@ -1,0 +1,21 @@
+#!/usr/bin/env fish
+# playground - Fire up Left, Right, and Center terminals with watch windows
+# Part of PCaC-Playgrounds three-persona setup.
+# Run this from Center (orchestrator) to launch:
+# - Left monitor: grok-left (watch + Left Grok chat)
+# - Right monitor: grok-right (watch + Right Grok chat)
+# - Center monitor: grok-center (tmux split to see both + status with pc pin)
+
+echo "Firing up PCaC playground terminals..."
+echo "  - Left: watch + chat for Left Grok persona"
+echo "  - Right: watch + chat for Right Grok persona"
+echo "  - Center: dedicated monitor terminal to see both (with pc pin 1566894405 status)"
+
+# Launch each in background so they open on their monitors
+grok-left &
+grok-right &
+grok-center &
+
+echo "Playground terminals launched. Check your monitors."
+echo "Use Ctrl-b in tmux panes to switch. Type 'grok: ...' in side chats to query Center."
+echo "Center sees both via the split view."

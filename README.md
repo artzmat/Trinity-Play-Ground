@@ -96,6 +96,8 @@ The chat logs live in `shared/left-chat.log` and `right-chat.log` (gitignored, u
 
 This keeps everything local, reversible, and under /data. The "three PCs" are monitor + persona + dedicated tools (kiosk on Left, games/media on Right, orchestrator on Center).
 
+**Quick fire-up**: Just type `playground` in your Center terminal. It will launch the Left, Right, and Center terminals with their watch windows (tmux splits for monitoring + chat boxes). Left and Right get their persona views; Center gets the split to see both.
+
 See the launchers' --help for full options. Use `pcac_post_chat` etc from common.sh when in Center.
 
 ## Usage Examples
@@ -112,6 +114,10 @@ grok-left          # start/attach Left Grok persona (tmux: watch top + chat bott
 grok-right         # start/attach Right Grok persona (tmux: watch top + chat bottom on Right monitor) -- set up like left
 grok-center        # open dedicated Center terminal (tmux split view) to see **both** Left and Right
 grok-left alice    # with "User cursor: alice" label for remote users
+
+# One-command to fire up all three with watch windows (as requested)
+playground         # launches Left, Right, and Center terminals with their watch/chat setups
+playground         # run this in Center Grok to bring up the full three-monitor playground experience
 
 # In Left chat box (bottom pane of grok-left or --watch-left): type
 #   grok: what do you think about cozy games for the Right side?
