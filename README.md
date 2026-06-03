@@ -45,6 +45,10 @@ Shared playground data (suggestions etc.) → `shared/` (inside repo for conveni
 - `--view-suggestions` (all sides): Shows the shared board.
 - `--kiosk` (Left): Prints ready-to-use locked-down Firefox/Chromium kiosk commands targeting the left monitor.
 - `--open-shared` (Right): Opens the suggestions folder in a file manager.
+- `--watch [USER]` (Left/Right): Opens live monitoring "watch" terminal on the physical side monitor.
+  - Left: system health, sensors, recent logs (with optional remote "User cursor: USER" label).
+  - Right: git status and recent commits (with optional remote "User cursor: USER" label).
+- Center convenience: `--watch-left [USER]` / `--watch-right [USER]`.
 - `pcac_list_monitors` + friendly side → output mapping using kscreen-doctor + xrandr.
 - Everything logs + is reversible.
 
@@ -53,14 +57,18 @@ Shared playground data (suggestions etc.) → `shared/` (inside repo for conveni
 # From Center (Grok CLI / orchestrator terminal)
 ./scripts/center-playground.sh --start-suggestions
 ./scripts/center-playground.sh --view-suggestions
+./scripts/center-playground.sh --watch-left          # opens health/logs watch on Left monitor
+./scripts/center-playground.sh --watch-right remote1 # opens git watch on Right with remote user label
 
 # From Left side (once you switch to that monitor or via delegation)
 ./scripts/left-playground.sh --start-suggestions
 ./scripts/left-playground.sh --kiosk          # shows the browser command for left monitor
+./scripts/left-playground.sh --watch          # opens/reopens the live health watch terminal
 
 # From Right
 ./scripts/right-playground.sh --view-suggestions
 ./scripts/right-playground.sh --open-shared
+./scripts/right-playground.sh --watch matt    # with user cursor label
 
 # Inspect monitors + mapping
 ./scripts/left-playground.sh --detect
