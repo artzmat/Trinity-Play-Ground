@@ -377,3 +377,45 @@ USERJS
   echo "$dir"
 }
 
+# --- Center monitor opener (symmetric to left/right) ---
+# Provides the dedicated "Center terminal to see both" with tmux 3-pane:
+# Left chat | Right chat | status (with pc pin 1566894405 marker)
+pcac_open_center_monitor() {
+  local user_label="${1:-$(whoami)}"
+  local tmux_script="${PCAC_ROOT}/scripts/center-tmux.sh"
+  local geom="1920x1080+1920+0"  # Center monitor (HDMI-A-1)
+  local title="PCaC-Center-Monitor-Both-${user_label}"
+
+  if [[ ! -x "$tmux_script" ]]; then
+    pcac_log ERROR "tmux launcher not found: $tmux_script"
+    return 1
+  fi
+
+  konsole --qwindowgeometry "$geom" --title "$title" -e "$tmux_script" &
+  local pid=$!
+  pcac_log INFO "Opened Center monitor terminal (geom $geom, user=$user_label, pid $pid) | pc pin 1566894405"
+  echo "  Title: $title (tmux split: Left Chat | Right Chat | Status)"
+  echo "  Ctrl-b to switch panes. Status includes pin marker."
+  echo "  To close: close the konsole window or kill $pid"
+}
+
+# --- Full playground launcher ---
+# When "playground" (or grok-center playground) is entered from Center Grok,
+# this fires up the three terminals with watch windows:
+#   - Left: konsole on DP-3 running tmux (watch top + Left Grok chat bottom)
+#   - Right: konsole on DP-2 running tmux (watch top + Right Grok chat bottom)
+#   - Center: konsole on HDMI-A-1 running tmux split view of both chats + status
+# Supports optional user-label for "User cursor" (e.g. playground alice for remote).
+# Logs include "pc pin 1566894405" for auto/snapshot context.
+pcac_launch_playground() {
+  local user_label="${1:-$(whoami)}"
+  pcac_log INFO "PLAYGROUND REQUESTED IN CENTER GROK: firing up Left, Right, and Center terminals with watch windows (user cursor: $user_label) | pc pin 1566894405"
+  pcac_ensure_dirs || true
+  pcac_open_watch_left "$user_label" || true
+  pcac_open_watch_right "$user_label" || true
+  pcac_open_center_monitor "$user_label" || true
+  pcac_log INFO "Playground launch complete for $user_label. Check physical monitors for the three konsole windows."
+  echo "Fired up playground terminals (Left watch+chat, Right watch+chat, Center both-view)."
+  echo "Use 'grok: your question' in side chats; respond from Center with pcac_post_chat."
+}
+

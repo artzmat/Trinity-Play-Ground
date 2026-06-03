@@ -8,7 +8,7 @@ set -euo pipefail
 REPO_DIR="/data/PCaC-Playgrounds"
 source "$REPO_DIR/scripts/lib/common.sh"
 
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+if [[ "${1-}" == "--help" || "${1-}" == "-h" ]]; then
   echo "Usage: grok-right [user-label]"
   echo "Launches the Right Grok persona (tmux watch + chat on Right monitor DP-2)."
   echo "Optional user-label for remote 'User cursor' distinction."

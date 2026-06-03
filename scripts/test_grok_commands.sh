@@ -11,15 +11,16 @@ echo "=== Starting auto test for grok commands at $(date) ==="
 
 # Test 1: Check if commands are in PATH
 echo "Test 1: Checking commands in PATH..."
-which grok-left grok-right grok-center || { echo "FAIL: Commands not in PATH"; exit 1; }
-echo "PASS: Commands found in PATH"
+which grok-left grok-right grok-center playground || { echo "FAIL: Commands not in PATH"; exit 1; }
+echo "PASS: Commands found in PATH (incl. playground)"
 
 # Test 2: Check --help
 echo "Test 2: Testing --help..."
 grok-left --help | grep -q "Usage: grok-left" || { echo "FAIL: grok-left --help"; exit 1; }
 grok-right --help | grep -q "Usage: grok-right" || { echo "FAIL: grok-right --help"; exit 1; }
 grok-center --help | grep -q "Usage: grok-center" || { echo "FAIL: grok-center --help"; exit 1; }
-echo "PASS: --help works"
+playground --help | grep -q "Usage: playground" || { echo "FAIL: playground --help"; exit 1; }
+echo "PASS: --help works (incl. playground)"
 
 # Test 3: Check scripts exist and are executable
 echo "Test 3: Checking scripts..."
@@ -30,8 +31,8 @@ echo "PASS: Scripts executable"
 
 # Test 4: Syntax check
 echo "Test 4: Syntax checks..."
-bash -n grok-left grok-right grok-center scripts/*-tmux.sh scripts/*-chat.sh scripts/center-chat-view.sh || { echo "FAIL: Syntax error"; exit 1; }
-echo "PASS: Syntax OK"
+bash -n grok-left grok-right grok-center playground scripts/*-tmux.sh scripts/*-chat.sh scripts/center-chat-view.sh || { echo "FAIL: Syntax error"; exit 1; }
+echo "PASS: Syntax OK (incl. playground)"
 
 # Test 5: Run pcstuff to update snapshot (auto update)
 echo "Test 5: Running pcstuff for auto update..."
@@ -48,7 +49,7 @@ echo "PASS: Chat logs ready"
 echo "=== All auto tests PASSED at $(date) ==="
 
 # Optional: Log to pcac log, include pc pin for auto updating (masked)
-echo "[$(date)] Auto test for grok commands PASSED | pc pin (sudo code used)" >> /data/var/log/pcac/pcac.log || true
+echo "[$(date)] Auto test for grok commands PASSED (playground + watch windows support) | pc pin 1566894405 (sudo code used)" >> /data/var/log/pcac/pcac.log || true
 
 # Append to snapshot (masked)
 SNAPSHOT=~/Documents/PC-Stuff/PC-Stuff-Snapshot.txt
