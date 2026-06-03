@@ -1,3 +1,7 @@
+# === PCaC /data discipline ===
+# All heavy state, VMs, containers, media, logs live under /data (outside or
+# alongside this repo). This .gitignore protects the control repo itself.
+
 # VM / libvirt images and metadata (we keep only XML exports here)
 *.qcow2
 *.img
@@ -26,13 +30,12 @@ lib/
 lib64/
 parts/
 sdist/
-var/
 wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 
-# Logs and local env
+# Logs and local env (covers anything committed inside the tree)
 *.log
 .env
 .env.local
@@ -43,3 +46,8 @@ wheels/
 # OS
 .DS_Store
 Thumbs.db
+
+# PCaC runtime state (if you ever create inside the repo tree)
+pcac-state/
+state/
+*.pcac
