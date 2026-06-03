@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=LM Studio
+Comment=Local LLM — models on /data/AI
+Exec=/usr/bin/lm-studio
+Icon=lm-studio
+Type=Application
+Categories=Development;AI;
+Terminal=false
+StartupNotify=true
