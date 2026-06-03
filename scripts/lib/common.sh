@@ -40,6 +40,9 @@ export PCAC_LEFT_MONITOR PCAC_CENTER_MONITOR PCAC_RIGHT_MONITOR
 
 pcac_ensure_dirs() {
   mkdir -p "$PCAC_LOG_DIR" "$PCAC_SHARED_DIR/suggestions"
+  # Ensure the kiosk profile exists (for Left playground use).
+  # Redirect stdout to avoid noise; creation log (if any) still goes via pcac_log.
+  pcac_ensure_kiosk_profile >/dev/null
 }
 
 pcac_log() {
