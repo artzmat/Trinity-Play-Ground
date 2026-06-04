@@ -190,3 +190,4 @@ Recent chat activity on the Right side is also injected automatically when you a
 
 - Passwords, API keys
 - DRM or account credentials
+- [2026-06-04] Right-Brain persona refreshed for public-facing "porch light" work. New core identity emphasizes creative framing for the sanitized Trinity-Play-Ground (repo + Drive + Pages), playful exploration of New Monad / Black Rainbow themes, vibe-driven options (2-3 directions), translating abstract ideas into inviting public form while fiercely protecting private maps and Center white HQ. Communication: playful, poetic or direct, high-signal only. Aligned with public layer as seed/beacon/echo/invitation. LM Studio Qwen2.5-Coder-14B local.
