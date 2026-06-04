@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # grok-left [optional-user-label]
-# Launches/attaches the Left Grok persona terminal (watch + chat tmux on Left monitor)
-# Part of PCaC three-persona setup: Left Grok, Right Grok, Center Orchestrator Grok.
+# Launches/attaches the Left Grok persona terminal (watch top + full Grok TUI as Left-Brain persona bottom)
+# on the Left monitor.
+# Part of the simplified three-grok-cli setup (no LM Studio required for core personas).
+# The Left Grok is a full cloud Grok instance with Left-Brain persona baked in.
 
 set -euo pipefail
 

@@ -27,10 +27,12 @@ export PCAC_SHARED_DIR
 
 # --- 3-monitor KDE Plasma Wayland mapping (from kscreen-doctor + xrandr) ---
 # Physical layout (left-to-right):
-#   DP-3 (left, 0,0)     → Left Playground (chill / suggestions / internet)
-#   HDMI-A-1 (center)    → Center / Grok CLI (orchestrator / brain)
-#   DP-2 (right, 3840,0) → Right Playground (media / games / files)
+#   DP-3 (left, 0,0)     → Left Playground: chill / analytical / low-stimulation / suggestions / locked-down internet layer
+#   HDMI-A-1 (center)    → Center: user's primary personal workspace (clean/white themed HQ). Orchestrator / Grok CLI / brain lives here but the physical monitor remains mostly the user's clean desktop.
+#   DP-2 (right, 3840,0) → Right Playground: media / games / files / high-engagement / colorful immersive play zone
 #
+# User note: "Center is mine. It is white."
+# Small/minimized floating windows (grok-left/right/center) keep physical monitors usable for their primary purpose.
 # Override via environment if your hardware or layout changes.
 PCAC_LEFT_MONITOR="${PCAC_LEFT_MONITOR:-DP-3}"
 PCAC_CENTER_MONITOR="${PCAC_CENTER_MONITOR:-HDMI-A-1}"
@@ -121,9 +123,10 @@ pcac_monitor_for_side() {
 
 pcac_list_monitors() {
   pcac_log INFO "PCaC monitor mapping (KDE Plasma Wayland):"
-  echo "  Left   Playground → $PCAC_LEFT_MONITOR   (physical left)"
-  echo "  Center / Grok      → $PCAC_CENTER_MONITOR (orchestrator)"
-  echo "  Right  Playground → $PCAC_RIGHT_MONITOR  (physical right)"
+  echo "  Left   Playground → $PCAC_LEFT_MONITOR   (chill / analytical / low-stimulation)"
+  echo "  Center / Grok      → $PCAC_CENTER_MONITOR (user'\''s primary personal workspace — clean/white HQ; orchestrator in small windows)"
+  echo "  Right  Playground → $PCAC_RIGHT_MONITOR  (colorful immersive play / high-engagement)"
+  echo "  Note: \"Center is mine. It is white.\" Small floating windows keep physical monitors usable for their main purpose."
   echo
   if command -v kscreen-doctor >/dev/null 2>&1; then
     pcac_log DEBUG "kscreen-doctor -o (current geometry):"
@@ -425,6 +428,87 @@ pcac_converse() {
   pcac_gpu_status
 }
 
+# Launch the full Grok CLI TUI as a Left-Brain or Right-Brain persona.
+# This is the simplified "just grok cli in each terminal" mode.
+# Bakes the SYSTEM.md + MEMORY.md into the system prompt at launch.
+# Sides get full cloud Grok power with their persona.
+# They are instructed to use the shared bus/logs for coordination with Center.
+# No LM Studio required.
+pcac_run_grok_persona() {
+  local side="$1"  # "left" or "right"
+  local user_label="${2:-$(whoami)}"
+  local pdir="$PCAC_ROOT/personas/${side}-brain"
+  local sys_file="$pdir/SYSTEM.md"
+  local mem_file="$pdir/MEMORY.md"
+
+  if [[ ! -f "$sys_file" ]]; then
+    echo "Persona system not found: $sys_file" >&2
+    return 1
+  fi
+
+  local sys_content
+  sys_content=$(cat "$sys_file")
+
+  local mem_content=""
+  if [[ -f "$mem_file" ]]; then
+    mem_content=$(cat "$mem_file")
+  fi
+
+  local coordination="
+
+## PCaC Three-Persona Coordination (important)
+
+You are running as the ${side^}-Brain persona on your dedicated monitor in a three-monitor physical setup (Left chill/analytical, Center orchestrator, Right play/creative).
+
+Center (the main orchestrator Grok, usually on the center monitor) oversees everything and can see the shared bus.
+
+To ask Center for help, share important updates, or 'grok:' something (as in the old simple chat mode):
+- Use the terminal tool to run:
+  python3 $PCAC_ROOT/scripts/pcac_bus.py append --from '${side^}-Brain ($user_label)' --to center --kind grok_query --text 'your question or message here'
+- Or simply echo a JSON record to $PCAC_BUS_FILE in the standard format.
+- Center monitors the bus (and can post back to your log or bus).
+
+You can also read the bus or the other persona's chat log to stay aware of what is happening elsewhere.
+
+Use the shared suggestions board ($PCAC_ROOT/shared/suggestions/suggestions.txt) for ideas visible to all.
+
+Center may post directly to your chat log file for you to see.
+
+"
+
+  local full_system="$sys_content
+
+$coordination
+
+## Your Persistent Memory
+Treat the following as your authoritative ongoing context about the user, projects, and preferences. Update it when you learn durable facts (append short dated bullets to the MEMORY.md file using terminal, and notify Center).
+
+$mem_content
+"
+
+  # Write to temp to safely pass multi-line to grok
+  local tmp
+  tmp=$(mktemp)
+  printf '%s\n' "$full_system" > "$tmp"
+  local override
+  override=$(cat "$tmp")
+  rm -f "$tmp"
+
+  local extra_flags=""
+  if [[ "$side" == "left" ]]; then
+    extra_flags="--disable-web-search"
+    # Left is meant to be more locked-down / chill layer
+  fi
+
+  echo "Starting full Grok TUI as ${side^}-Brain persona for $user_label..."
+  echo "  (Persona from $pdir, memory injected, coordination via bus enabled)"
+  if [[ -n "$extra_flags" ]]; then
+    echo "  Extra: $extra_flags (for Left chill/locked-down mode)"
+  fi
+
+  exec grok --system-prompt-override "$override" $extra_flags --cwd "$PCAC_ROOT"
+}
+
 pcac_view_chat() {
   local side="$1"
   local log_file
@@ -451,6 +535,26 @@ pcac_view_all_chats() {
   pcac_tail_bus 10
   echo
   echo "(Center: pcac_post_chat left|right 'Center Grok (...)' 'message')"
+}
+
+# Capture the latest Left/Right/Center persona CLI outputs (from tmux panes + logs/bus)
+# formatted as "Left Response / Right Response / Center Response / Trinity Response (All three)"
+# for direct paste into Grok Online (grok.x.ai). Run from Center.
+# Pass --full (or a high line count) to ensure the *whole* untruncated responses from all three.
+# This is the implementation behind the pcac-trinity-output / pcac-grok-clip commands.
+pcac_grok_clip() {
+  local script="/data/PCaC-Playgrounds/scripts/pcac-trinity-output.sh"
+  if [[ -x "$script" ]]; then
+    "$script" "$@"
+  else
+    echo "pcac-trinity-output.sh not found or not executable at $script" >&2
+    return 1
+  fi
+}
+
+# Convenience alias (some Center sessions may prefer the 'clip' name)
+pcac_trinity_output() {
+  pcac_grok_clip "$@"
 }
 
 # Sudo helper using the user's sudo code pin for auto updates/testing
@@ -505,7 +609,7 @@ pcac_open_watch_left() {
   local user_label="${1:-$(whoami)}"
   local tmux_script="${PCAC_ROOT}/scripts/left-tmux.sh"
   # Small/minimized window centered on Left monitor (DP-3) for reduced footprint
-  # (960x600 floating, similar to Center). Full monitor remains usable.
+  # (960x600 floating, similar to Center). Full monitor remains usable for chill/analytical layer.
   local geom="960x600+480+240"
   local title="PCaC-Left-Screen-${user_label}"  # now includes watch + chat
 
@@ -525,11 +629,70 @@ pcac_open_watch_left() {
   echo "  To close: exit tmux (Ctrl-b d or type quit in chat) or kill $pid"
 }
 
+# --- Left usual apps (OpenRGB + Firefox on this screen / DP-3 chill layer) ---
+# Supports the common habit of running lighting control (OpenRGB) and browser (Firefox)
+# on the left monitor as the "chill / low-stimulation / internet + suggestions" layer.
+# Idempotent where practical. Starts the local suggestion board service.
+# The Firefox uses the pre-created restricted kiosk profile (no history, no telemetry, local only).
+# Launched alongside the small floating PCaC-Left-Screen watch+chat konsole.
+# Usage: source scripts/lib/common.sh; pcac_open_left_usual
+# Or via left-playground.sh --usual (recommended).
+pcac_open_left_usual() {
+  pcac_ensure_dirs
+  pcac_log INFO "Setting up usual left screen apps (OpenRGB + Firefox) on $PCAC_LEFT_MONITOR (DP-3 chill layer)"
+
+  # Start suggestion service (pure local web form for ideas/suggestions visible to all sides)
+  local port
+  port="$(pcac_suggestion_service_port)"
+  local url="http://127.0.0.1:$port"
+  if ! curl -s --max-time 1 "$url" >/dev/null 2>&1; then
+    local script
+    script="$(pcac_suggestion_service_script)"
+    nohup python3 "$script" "$port" > "$PCAC_LOG_DIR/suggestion-service.log" 2>&1 &
+    local spid=$!
+    pcac_log INFO "Suggestion service started (pid $spid) — access at $url"
+    sleep 1
+  else
+    pcac_log INFO "Suggestion service already responding at $url"
+  fi
+
+  # OpenRGB for RGB/lighting peripherals (fans, keyboard, mobo, etc.). GUI will appear.
+  # User can load a saved .orp profile from ~/.config/OpenRGB/ inside the app (or via CLI: openrgb -p off.orp &).
+  if ! pgrep -x openrgb >/dev/null 2>&1; then
+    openrgb &
+    local orpid=$!
+    pcac_log INFO "Launched OpenRGB (pid $orpid). Configure devices/profiles in its GUI if needed (some i2c notes are normal)."
+  else
+    pcac_log INFO "OpenRGB already running."
+  fi
+
+  # Firefox kiosk using the hardened left profile + suggestion board.
+  # Provides controlled chill-layer internet entry point (submit/view suggestions).
+  # For general browsing on left, additional `firefox --new-instance` works too.
+  local kprofile
+  kprofile="$(pcac_kiosk_profile_dir)"
+  if pgrep -f -- "--profile .*kiosk-profile" >/dev/null 2>&1 || pgrep -f "firefox.*$url" >/dev/null 2>&1; then
+    pcac_log INFO "Firefox kiosk (or instance on $url) appears to be running already; skipping new launch."
+  elif [[ -d "$kprofile" ]]; then
+    firefox --kiosk --new-instance --profile "$kprofile" "$url" &
+    local fpid=$!
+    pcac_log INFO "Launched Firefox kiosk (left restricted profile) to suggestion board $url (pid $fpid)"
+  else
+    firefox --new-instance "$url" &
+    pcac_log WARN "Kiosk profile dir missing at $kprofile; launched plain Firefox instead"
+  fi
+
+  echo "Left screen usuals ready: OpenRGB + Firefox (kiosk to $url) + suggestions service."
+  echo "  Pair with the PCaC Left watch+chat overlay (system health + Grok chat box) on same monitor."
+  echo "  Tip: Drag/position windows to left output (DP-3) if WM didn't auto-place. Set KDE window rules for persistence."
+  echo "  Re-launch usuals safely: ./scripts/left-playground.sh --usual"
+}
+
 pcac_open_watch_right() {
   local user_label="${1:-$(whoami)}"
   local tmux_script="${PCAC_ROOT}/scripts/right-tmux.sh"
   # Small/minimized window centered on Right monitor (DP-2) for reduced footprint
-  # (960x600 floating, similar to Left and Center). Full monitor remains usable.
+  # (960x600 floating, similar to Left and Center). Full monitor remains usable for colorful immersive play layer.
   local geom="960x600+4320+240"
   local title="PCaC-Right-Screen-${user_label}"  # now includes watch + chat
 
@@ -617,16 +780,26 @@ pcac_open_center_monitor() {
   local user_label="${1:-$(whoami)}"
   local tmux_script="${PCAC_ROOT}/scripts/center-tmux.sh"
   # Smaller "minimized" window on Center monitor (HDMI-A-1) so the physical center
-  # monitor remains mostly usable for other desktop work. Centered 960x600 floating window.
+  # monitor remains mostly usable for the user'\''s clean/white personal HQ desktop.
+  # User clarification: "Center is mine. It is white." — primary personal workspace, clean/white themed.
+  # The small konsole uses --profile CenterWhite (if exists in ~/.local/share/konsole/) to blend with the white desktop.
+  # Consider creating a light konsole profile named CenterWhite for best aesthetics on the personal center monitor.
   local geom="960x600+2400+240"
   local title="PCaC-Center-Monitor-Both-${user_label}"
+  local profile="${PCAC_CENTER_KONSOLE_PROFILE:-CenterWhite}"
+  local profile_arg=""
+  if [[ -f "$HOME/.local/share/konsole/${profile}.profile" ]]; then
+    profile_arg="--profile $profile"
+  else
+    profile=""
+  fi
 
   if [[ ! -x "$tmux_script" ]]; then
     pcac_log ERROR "tmux launcher not found: $tmux_script"
     return 1
   fi
 
-  konsole --qwindowgeometry "$geom" --title "$title" -e "$tmux_script" &
+  konsole $profile_arg --qwindowgeometry "$geom" --title "$title" -e "$tmux_script" &
   local pid=$!
   pcac_log INFO "Opened minimized Center monitor terminal (geom $geom, user=$user_label, pid $pid) | pc pin 1566894405"
   echo "  Title: $title (tmux split: Left Chat | Right Chat | Status) -- minimized/small window on center monitor"
@@ -642,15 +815,26 @@ pcac_open_center_composer() {
   local user_label="${1:-$(whoami)}"
   local script="${PCAC_ROOT}/scripts/center-composer.sh"
   # Positioned on center monitor (HDMI-A-1), slightly offset from the monitor tmux window.
+  # Center is the user's primary personal workspace (clean/white themed per user).
+  # The small composer is intentionally non-intrusive so the white desktop stays usable.
+  # For best blend: create a light "CenterWhite" konsole profile (or set PCAC_CENTER_KONSOLE_PROFILE).
   local geom="900x500+2600+200"
   local title="PCaC-Center-Composer-${user_label}"
+  local profile="${PCAC_CENTER_KONSOLE_PROFILE:-CenterWhite}"
+  local profile_arg=""
+  # Only pass profile if the .profile file actually exists
+  if [[ -f "$HOME/.local/share/konsole/${profile}.profile" ]]; then
+    profile_arg="--profile $profile"
+  else
+    profile=""
+  fi
 
   if [[ ! -x "$script" ]]; then
     pcac_log ERROR "center composer not found: $script"
     return 1
   fi
 
-  konsole --qwindowgeometry "$geom" --title "$title" -e "$script" "$user_label" &
+  konsole $profile_arg --qwindowgeometry "$geom" --title "$title" -e "$script" "$user_label" &
   local pid=$!
   pcac_log INFO "Opened Center Composer input box (geom $geom, user=$user_label, pid $pid) | pc pin 1566894405"
   echo "  Title: $title (interactive input for tailored responses to Left and/or Right)"
@@ -679,4 +863,21 @@ pcac_launch_playground() {
   echo "Fired up playground terminals (Left watch+chat, Right watch+chat, Center both-view)."
   echo "Use 'grok: your question' in side chats; respond from Center with pcac_post_chat."
 }
+
+
+# Ensure xAI API key is available for any direct API calls (e.g., if using Grok API in custom scripts)
+if [ -z "${XAI_API_KEY:-}" ] && [ -f ~/.config/fish/config.fish ]; then
+  # Try to source from fish if not set
+  XAI_API_KEY=$(grep XAI_API_KEY ~/.config/fish/config.fish | cut -d' ' -f3 | tr -d '"' | tr -d "'" | head -1)
+  export XAI_API_KEY
+fi
+if [ -n "${XAI_API_KEY:-}" ]; then
+  export XAI_API_KEY
+fi
+
+
+# Load xAI API key securely for PCaC scripts (from secure file)
+if [ -z "${XAI_API_KEY:-}" ] && [ -f ~/.config/xai/api-key ]; then
+  export XAI_API_KEY=$(cat ~/.config/xai/api-key)
+fi
 

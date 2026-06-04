@@ -24,6 +24,11 @@ Options:
   --kiosk              Launch (or show command for) a locked-down browser kiosk
                        on the left monitor pointing at the suggestion board.
                        Also automatically opens the health/logs watch terminal on Left.
+  --usual              Launch the user's usual left-screen apps for the chill layer:
+                       OpenRGB (RGB/lighting control) + Firefox (kiosk to suggestion board).
+                       Also ensures the local suggestion service is running.
+                       Safe to re-run; pairs with the watch+chat overlay from --watch.
+                       This is the quick "set up this screen" command for DP-3.
   --watch [USER]       Open (or re-open) the full Left screen on DP-3: tmux with
                        health/logs watch (top pane) + interactive chat box (bottom).
                        Use 'grok: ...' in chat to ask Center Grok. Optional USER label
@@ -46,6 +51,7 @@ main() {
   local do_start_suggestions=false
   local do_view=false
   local do_kiosk=false
+  local do_usual=false
   local do_watch=false
   local watch_user=""
 
@@ -73,6 +79,10 @@ main() {
         ;;
       --kiosk)
         do_kiosk=true
+        shift
+        ;;
+      --usual|--start-usual|--apps)
+        do_usual=true
         shift
         ;;
       --watch)
@@ -171,6 +181,10 @@ KIOSK
     fi
   fi
 
+  if $do_usual; then
+    pcac_open_left_usual
+  fi
+
   # === EXPANSION POINTS (Grok will fill these in over time) ===
   # 1. Launch a locked-down browser kiosk pinned to the left output (see --kiosk).
   # 2. Start (or connect to) a local service providing suggestions / PCaC interface (see --start-suggestions).
@@ -182,7 +196,7 @@ KIOSK
   pcac_log INFO "Next steps will be added here (browser kiosk, local web service, VM launch, etc.)"
 
   if [[ "$mode" == "dry" || "$mode" == "run" ]]; then
-    pcac_log INFO "(placeholder / dry-run mode — use --start-suggestions, --kiosk (also opens watch), or --watch to try real pieces)"
+    pcac_log INFO "(use --start-suggestions, --kiosk, --usual (OpenRGB+Firefox on left), or --watch)"
   fi
 
   pcac_log INFO "Left playground launcher complete."

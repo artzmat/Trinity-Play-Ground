@@ -131,6 +131,16 @@ main() {
   # 5. Handle audio routing, controller detection, etc. for games.
   # 6. "Accept suggestion" flows (e.g. if suggestion mentions a game, one-click launch it here).
 
+  # User's typical right daily setup (as of this workflow + cross-convo with Left):
+  #   right-daily          # Spotify + Steam + Thunderbird + plasma-systemmonitor (positioned on DP-2) + surfaces Left suggestions
+  #   right-daily status   # check the quartet + playground VM viewer
+  #   right-daily btop     # quick btop terminal on the edge
+  #   right-daily with-vm  # daily apps + entertainment guest VM
+  #   right-daily --creative  # compact creative layer (slot machine, music viz, ambient stories) + mood-sync to Left minimalist
+  # Script lives at ~/bin/right-daily. First positioning may need a manual assist or KDE Window Rules.
+  # New: pcac-start-brains (~/bin too) — start LM Studio + exact Local Server steps for left<->right convos.
+  # Creative elements: right-only, compact/idle, protect Center white (HDMI-A-1) with zero visual/mental spill.
+
   pcac_list_monitors
 
   pcac_log INFO "Next steps will be added here (gaming session, media player, VM launch, etc.)"

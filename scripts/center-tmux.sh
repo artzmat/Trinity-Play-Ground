@@ -49,6 +49,15 @@ tmux select-pane -t "$SESSION:0.2" -T "Bus / Grok inbox"
 # Rename window
 tmux rename-window -t "$SESSION" "center-monitor-both"
 
+# Launch Grok web UI (your online Grok account chat interface) as a supplementary visual/parallel access on Center monitor.
+# The primary Center is this CLI/TUI + composer for orchestration. The web UI can be useful for quick non-agentic interactions or reference.
+firefox --new-window "https://grok.x.ai" &
+
+# Launch SearX (local private search at 127.0.0.1:8080) on Center screen to create the 'Searx Grok' hub:
+# Easy local research (private, low-impact) right alongside your Grok web/CLI on the orchestrator's monitor (HDMI-A-1).
+# This streamlines access so research and Grok interactions are consolidated on Center without switching monitors or heavy copy-paste.
+firefox --new-window "http://127.0.0.1:8080" &
+
 echo "Center tmux ready (split view of both sides). Attaching..."
 echo "For interactive replies (incl /tailor, /ask-left/right/both for LMStudio brains, /power for hardware):"
 echo "  source /data/PCaC-Playgrounds/scripts/lib/common.sh ; pcac_open_center_composer"

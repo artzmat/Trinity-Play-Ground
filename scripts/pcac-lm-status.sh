@@ -16,8 +16,8 @@ echo "Time: $(date -Iseconds)"
 echo ""
 
 if [[ -f "$ENV_FILE" ]]; then
-  echo "--- config/lmstudio.env (side mapping) ---"
-  grep -E '^LMSTUDIO_MODEL' "$ENV_FILE" | grep -v '^#' || true
+  echo "--- config/lmstudio.env (side mapping + Left/Right persona tuning) ---"
+  grep -E '^(LMSTUDIO_MODEL|LMSTUDIO_TEMPERATURE|LMSTUDIO_MAX_TOKENS)' "$ENV_FILE" | grep -v '^#' || true
   echo ""
 fi
 

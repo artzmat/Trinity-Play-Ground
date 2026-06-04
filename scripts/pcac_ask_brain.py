@@ -94,6 +94,7 @@ def chat_completion(
     user_text: str,
     api_key: str,
     max_tokens: int,
+    temperature: float = 0.7,
 ) -> str:
     messages = [
         {"role": "system", "content": system},
@@ -103,7 +104,7 @@ def chat_completion(
         {
             "model": model,
             "messages": messages,
-            "temperature": 0.7,
+            "temperature": temperature,
             "max_tokens": max_tokens,
         }
     ).encode("utf-8")
@@ -172,7 +173,13 @@ def main() -> int:
     cfg = load_env_file(CONFIG_ENV)
     base = api_base(cfg)
     api_key = cfg.get("LMSTUDIO_API_KEY", "lm-studio")
-    max_tokens = int(cfg.get("LMSTUDIO_MAX_TOKENS", "512"))
+
+    if side == "left":
+        max_tokens = int(cfg.get("LMSTUDIO_MAX_TOKENS_LEFT", cfg.get("LMSTUDIO_MAX_TOKENS", "512")))
+        temperature = float(cfg.get("LMSTUDIO_TEMPERATURE_LEFT", "0.35"))
+    else:
+        max_tokens = int(cfg.get("LMSTUDIO_MAX_TOKENS_RIGHT", cfg.get("LMSTUDIO_MAX_TOKENS", "512")))
+        temperature = float(cfg.get("LMSTUDIO_TEMPERATURE_RIGHT", "0.75"))
 
     brain_name = "Left-Brain" if side == "left" else "Right-Brain"
     from_chat = f"{brain_name} ({user_label})"
@@ -186,9 +193,13 @@ def main() -> int:
     if recent:
         system_block += "\n\n---\n\n# Recent activity on this side\n" + recent
 
+    # Extra reinforcement for Left-Brain (analytical structure, low-stimulation, Center coordination)
+    if side == "left":
+        system_block += "\n\n---\n\n# Critical Response Rules for This Query\nAlways begin with exactly '1. **Bottom line**' (1-2 sentences). Then '2. **Analysis**' as bullets (include risks, assumptions, data). End with '3. **Suggested next action**' (exactly one concrete step, propose only). Stay concise, chill, use tools via terminal if needed for facts before replying. No hype. Prefer /data. Coordinate via pcac_post_chat or bus when appropriate."
+
     try:
         model = resolve_model_id(side, base, cfg)
-        reply = chat_completion(base, model, system_block, user_msg, api_key, max_tokens)
+        reply = chat_completion(base, model, system_block, user_msg, api_key, max_tokens, temperature)
     except Exception as e:
         err = f"[{brain_name} offline] {e}"
         post_chat_log(side, from_chat, err, "error")

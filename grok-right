@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # grok-right [optional-user-label]
-# Launches/attaches the Right Grok persona terminal (watch + chat tmux on Right monitor)
-# Part of PCaC three-persona setup: Left Grok, Right Grok, Center Orchestrator Grok.
+# Launches/attaches the Right Grok persona terminal (watch top + full Grok TUI as Right-Brain persona bottom)
+# on the Right monitor.
+# Part of the simplified three-grok-cli setup (no LM Studio required).
+# Full cloud Grok with Right-Brain persona.
 
 set -euo pipefail
 

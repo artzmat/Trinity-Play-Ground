@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Right TMUX session: combined watch (top) + chat (bottom) for the Right screen.
-# This turns the Right monitor into a self-contained "Right persona" terminal
-# with monitoring + chat to Center Grok.
-# Launched via small/minimized konsole window (960x600 centered) on Right monitor.
-# User (Right) can switch panes with Ctrl-b then arrows (or mouse if enabled).
-# The chat box allows using Grok via 'grok: ...' posts.
+# Right TMUX session: combined watch (top) + full Grok TUI as Right-Brain persona (bottom).
+# This turns the Right monitor (DP-2) into a self-contained "Right persona" terminal
+# with monitoring + a full powerful Grok CLI running as the Right-Brain (cloud, persona-injected).
+# No LM Studio needed.
+# The persona Grok coordinates with Center via the shared bus/logs.
 
 set -euo pipefail
 
@@ -31,9 +30,10 @@ echo "Creating new tmux session for Right: watch + chat"
 tmux new-session -d -s "$SESSION" -n main -c "$SCRIPT_DIR" \
   "exec $SCRIPT_DIR/right-watch.sh ${1:-$(whoami)}"
 
-# Split horizontal (bottom pane for chat)
+# Split horizontal (bottom pane for full Grok TUI as Right-Brain persona)
+# Full grok cli as the creative/playful persona (no local LM required).
 tmux split-window -v -t "$SESSION" -p 30 -c "$SCRIPT_DIR" \
-  "exec $SCRIPT_DIR/right-chat.sh ${1:-$(whoami)}"
+  "bash -c 'source \"$SCRIPT_DIR/lib/common.sh\"; pcac_run_grok_persona right \"${1:-$(whoami)}\"'"
 
 # Optional: enable mouse for easier pane switching
 tmux set -g mouse on

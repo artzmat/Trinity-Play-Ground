@@ -6,15 +6,17 @@
 - **Everything lives on /data** (the 4 TB drive).
   - VMs, containers, media, games, logs, state, downloads, projects.
 - **1 TB root drive stays clean** — only the minimal OS + personal dotfiles + this control repo.
-- Separation of concerns across physical (or virtual) monitors:
-  - **Left**: locked-down internet, suggestions, chill / low-stimulation layer.
-  - **Center**: the Grok Center — main control surface, orchestrator, primary Grok/suggestion interface, "brain".
-  - **Right**: media, games, files, high-engagement / play layer.
+- Separation of concerns across physical (or virtual) monitors (user clarification: "Center is mine. It is white."):
+  - **Left (DP-3)**: locked-down internet, suggestions, chill / analytical / low-stimulation layer.
+  - **Center (HDMI-A-1)**: user's primary personal workspace — clean/white themed HQ. The Grok Center (orchestrator / main control surface / brain) runs here, but the physical monitor stays mostly the user's clean personal desktop (small minimized windows help).
+  - **Right (DP-2)**: media, games, files, high-engagement / colorful immersive play layer.
 
 ## 3-Monitor Mapping (your actual hardware)
-- **Left monitor (DP-3)**   → Left Playground: Internet / Suggestions / Chill layer (PCaC)
-- **Center monitor (HDMI-A-1)** → Center / Grok CLI: Orchestrator / brain (this is where you run Grok + these scripts)
-- **Right monitor (DP-2)**  → Right Playground: Media, Games, Files / high-engagement
+- **Left monitor (DP-3)**   → Left Playground: chill / analytical / low-stimulation / suggestions / locked-down internet (PCaC)
+- **Center monitor (HDMI-A-1)** → Center: user's primary personal workspace (clean/white themed HQ). Orchestrator / Grok CLI / brain runs here in small/minimized windows so the physical monitor remains usable for personal desktop use.
+- **Right monitor (DP-2)**  → Right Playground: Media, Games, Files / high-engagement / colorful immersive play zone
+
+User note: "Center is mine. It is white."
 
 (Defined in `scripts/lib/common.sh` — override with `PCAC_LEFT_MONITOR=...` etc. if your outputs change.)
 
@@ -50,6 +52,7 @@ Shared playground data (suggestions etc.) → `shared/` (inside repo for conveni
 - `--start-suggestions` (Left/Center): Starts the pure-Python local web suggestion board (localhost only).
 - `--view-suggestions` (all sides): Shows the shared board.
 - `--kiosk` (Left): Prints ready-to-use locked-down Firefox/Chromium kiosk commands targeting the left monitor.
+- `--usual` (Left): One-command setup for the typical left screen apps — OpenRGB (lighting) + Firefox kiosk to the local suggestion board (the "I usually open OpenRGB and Firefox on this screen" flow). Starts suggestion service too. Safe/idempotent.
 - `--open-shared` (Right): Opens the suggestions folder in a file manager.
 - `--watch [USER]` (Left/Right): Opens the full side "persona screen" as a tmux split:
   - Top pane: live watch (health/logs for Left; git for Right)
@@ -81,32 +84,30 @@ Local LM Studio loads persona prompts on **`ask:`** or **`grok:`** in side chats
 See `docs/brains-audit-20260603.md` and `docs/brains-phase1a-20260603.md` for storage setup on `/data/AI`.
 
 ## Three-Persona "PC into Three" Setup (Left Grok / Right Grok / Center Orchestrator Grok)
-The goal is to turn one physical PC + 3 monitors into three logical "computers"/personas:
+The goal is to turn one physical PC + 3 monitors into three logical "computers"/personas by running a full Grok CLI (cloud) instance in each, configured as its persona. LM Studio / local models are **optional** (for acceleration or the old local `ask:` brains) — not required for the core experience.
 
-- **Left screen (DP-3)**: Left Grok persona. Runs full tmux (via `--watch` or `--watch-left`):
+- **Left screen (DP-3)**: Left Grok persona (full Grok TUI with Left-Brain SYSTEM.md + MEMORY.md baked in at launch). Runs in tmux (via `grok-left`):
   - Top: live health/logs watch.
   - Bottom: interactive chat box. Type messages or `grok: your question` (now to local LMStudio side Grok) or `center: your question to Center`.
   - Can physically see Center monitor but has no control.
-- **Right screen (DP-2)**: Right Grok persona. Same structure (git watch + chat).
-- **Center screen (HDMI-A-1)**: Orchestrator Grok (you, running this Grok CLI).
-  - Use `grok-center` or `./scripts/center-playground.sh --view-chats` to open a *minimized/small* Center terminal (small 960x600 konsole window centered on the center monitor + tmux split view) to see **both** Left and Right chats live in one window. (This keeps the physical center monitor mostly usable.)
-  - Similarly, `grok-left` and `grok-right` now open small/minimized 960x600 windows on their monitors (Left/Right physical monitors remain mostly usable).
+- **Right screen (DP-2)**: Right Grok persona. Same structure (git watch + chat). Colorful immersive play zone.
+- **Center screen (HDMI-A-1)**: User's primary personal workspace (clean/white themed HQ). Orchestrator Grok (you, running this Grok CLI) lives here.
+  - Use `grok-center` or `./scripts/center-playground.sh --view-chats` to open a *minimized/small* Center terminal (small 960x600 konsole window centered on the center monitor + tmux split view) to see **both** Left and Right chats live in one window. (This keeps the physical center monitor mostly usable for the user's clean white personal desktop.)
+  - Similarly, `grok-left` and `grok-right` now open small/minimized 960x600 windows on their monitors (Left/Right physical monitors remain mostly usable for their layers).
   - Respond by posting e.g. `pcac_post_chat left "Center Grok (to Left)" "My response..."` or manually to the .log files.
   - Controls everything: launchers, kiosk, services, etc.
   - Left/Right "use Grok" (now local LMStudio) by posting `grok:` queries in their chat; you (Center) reply into their log (using `center:` from side or via composer).
   - `grok-center` gives you the "Center terminal to see both".
 
-**How to "chat as Left/Right"**:
-- On the side screen: run the chat (or use the bottom pane).
-- Type normal messages (they appear in log for Center to see).
-- On side: `grok: tell me a chill suggestion for Right` — query to the local Left/Right brain (LM Studio Qwen as the side "Grok").
-- On side: `center: what should I prioritize today?` — query to Center Orchestrator Grok (main grok cli) — appears as grok_query on bus.
-- `ask: ...` still works for local brain.
-- From Center composer: use /ask-left /ask-right /ask-both to directly utilize Left-Right-LMStudio brains from CENTER.
-- Center sees the center: queries (via bus watch or tail), thinks, posts response back as "Center Grok (to Left): ...".
-- The side sees the response in their chat pane.
+**How the personas work now (simplified grok-cli-in-each mode)**:
+- On the side screen: the bottom pane *is* the full Grok TUI running as that persona (Left-Brain or Right-Brain with full cloud capabilities + injected SYSTEM + MEMORY).
+- The persona Grok can reason, use tools (with your approval), remember (its own + the injected shared MD), etc.
+- For coordination with Center or the other persona: the side Grok is instructed to post to the shared bus (it can use terminal commands to do so). Center (you) monitors the bus in the visibility window and can respond by posting to the side's log or using the composer.
+- You (human at Center) can also directly use the Center Composer (`center-composer`) with /tailor to send different tailored messages to the two side Groks' logs.
+- No more `ask:` / local LM distinction — the side Groks *are* the smart personas.
+- The old local LM Studio mode is still available if you start it (for fast/private/local `ask:` or the old scripts), but not required.
 
-**Remote users / cursors**: Pass `[USER]` e.g. `--watch-left alice` — appears as "User cursor: alice" everywhere + in titles.
+**Remote users / cursors**: Pass `[USER]` e.g. `grok-left alice` — appears in titles and can be used in prompts.
 
 **Launching the full experience** (from Center):
 ```bash
@@ -163,6 +164,7 @@ playground alice   # with user cursor label
 # From Left side (once you switch to that monitor or via delegation)
 ./scripts/left-playground.sh --start-suggestions
 ./scripts/left-playground.sh --kiosk          # shows the browser command (now also opens watch+chat)
+./scripts/left-playground.sh --usual          # OpenRGB + Firefox (kiosk to suggestions) + service — usual apps on left/DP-3 chill screen
 ./scripts/left-playground.sh --watch          # opens/reopens full Left tmux (watch top + chat bottom)
 
 # From Right
