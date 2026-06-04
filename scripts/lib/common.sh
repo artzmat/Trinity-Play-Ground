@@ -644,6 +644,7 @@ pcac_open_center_composer() {
   pcac_log INFO "Opened Center Composer input box (geom $geom, user=$user_label, pid $pid) | pc pin 1566894405"
   echo "  Title: $title (interactive input for tailored responses to Left and/or Right)"
   echo "  Type messages here; use /tailor for different text per side, /left /right /both for targeting."
+  echo "  NEW: /ask-left /ask-right /ask-both to directly utilize Left-Right LMStudio brains from CENTER."
   echo "  All output logged to chats + bus. Pair with the small center-tmux monitor window."
   echo "  To close: type 'quit' inside or kill $pid"
 }
