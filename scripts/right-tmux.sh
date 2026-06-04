@@ -2,7 +2,7 @@
 # Right TMUX session: combined watch (top) + chat (bottom) for the Right screen.
 # This turns the Right monitor into a self-contained "Right persona" terminal
 # with monitoring + chat to Center Grok.
-# Launch via konsole on Right geometry.
+# Launched via small/minimized konsole window (960x600 centered) on Right monitor.
 # User (Right) can switch panes with Ctrl-b then arrows (or mouse if enabled).
 # The chat box allows using Grok via 'grok: ...' posts.
 

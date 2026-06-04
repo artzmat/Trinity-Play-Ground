@@ -4,8 +4,8 @@
 #
 # When you enter the term "playground" in Center Grok (the central orchestrator shell),
 # this fires the full three terminals:
-#   - Left: konsole on Left monitor (DP-3) with tmux watch (top) + Left Grok chat (bottom)
-#   - Right: konsole on Right monitor (DP-2) with tmux watch (top) + Right Grok chat (bottom)
+#   - Left: small/minimized konsole (960x600 centered) on Left monitor (DP-3) with tmux watch (top) + Left Grok chat (bottom)
+#   - Right: small/minimized konsole (960x600 centered) on Right monitor (DP-2) with tmux watch (top) + Right Grok chat (bottom)
 #   - Center: small/minimized konsole window (960x600 centered) on Center monitor (HDMI-A-1) with tmux split to see both chats + status (pc pin 1566894405)
 #
 # Run from Center terminal. Optional [user-label] for "User cursor:" (e.g. for remote/LAN-party cursors).
@@ -21,8 +21,8 @@ source "$REPO_DIR/scripts/lib/common.sh"
 if [[ "${1-}" == "--help" || "${1-}" == "-h" ]]; then
   echo "Usage: playground [user-label]"
   echo "From Center Grok: fire up Left, Right, and Center terminals with watch windows."
-  echo "  Left  (DP-3): watch + chat box for Left Grok persona"
-  echo "  Right (DP-2): watch + chat box for Right Grok persona"
+  echo "  Left  (DP-3): *small/minimized* watch + chat box (960x600 centered window) for Left Grok persona"
+  echo "  Right (DP-2): *small/minimized* watch + chat box (960x600 centered window) for Right Grok persona"
   echo "  Center (HDMI-A-1): *small/minimized* split view of both + status (960x600 centered window; includes pc pin 1566894405)"
   echo
   echo "Optional user-label sets the 'User cursor' in headers/titles/logs (for future remote users)."

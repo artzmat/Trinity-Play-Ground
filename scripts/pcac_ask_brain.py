@@ -41,6 +41,25 @@ def read_persona(side: str) -> tuple[str, str]:
     return system, memory
 
 
+def get_recent_context(side: str, n: int = 8) -> str:
+    """Return a short 'Recent activity on this side' block from the side's chat log.
+    Gives the brain continuity across chat restarts / reboots without full history.
+    """
+    log_name = "left-chat.log" if side == "left" else "right-chat.log"
+    log_path = REPO / "shared" / log_name
+    if not log_path.exists():
+        return ""
+    try:
+        lines = [ln.rstrip() for ln in log_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+        recent = lines[-n:]
+        if not recent:
+            return ""
+        formatted = "\n".join(recent)
+        return f"Recent messages on this side (most recent last):\n{formatted}"
+    except Exception:
+        return ""
+
+
 def api_base(cfg: dict[str, str]) -> str:
     return os.environ.get(
         "LMSTUDIO_URL",
@@ -159,9 +178,13 @@ def main() -> int:
     from_chat = f"{brain_name} ({user_label})"
 
     system, memory = read_persona(side)
+    recent = get_recent_context(side, n=8)
+
     system_block = system
     if memory.strip():
-        system_block += "\n\n---\n\n# Persistent memory\n\n" + memory
+        system_block += "\n\n---\n\n# Persistent Memory (curated facts + context about you and ongoing work)\n\n" + memory.strip()
+    if recent:
+        system_block += "\n\n---\n\n# Recent activity on this side\n" + recent
 
     try:
         model = resolve_model_id(side, base, cfg)

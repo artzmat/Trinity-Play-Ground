@@ -61,7 +61,8 @@ Shared playground data (suggestions etc.) → `shared/` (inside repo for conveni
 - Center convenience:
   - `--watch-left [USER]` / `--watch-right [USER]`: open the full side screens from orchestrator.
   - `--view-chats`: tail both Left and Right chats in Center (orchestrator view).
-- `pcac_post_chat left/right "From" "message"` or `pcac_center_reply left|right "message"` for Center.
+  - `center-composer` (or `pcac_open_center_composer`): dedicated interactive chat box on center monitor for responses. Supports sending the same message or **/tailor** for different tailored messages to Left vs. Right in one session. All centrally logged.
+- `pcac_post_chat left/right "From" "message"` or `pcac_center_reply left|right "message"` (or `pcac_center_reply_both`) for Center.
 - `pcac-grok-inbox` / `center-bus-watch.sh` — Center sees `grok:` queries on the bus.
 - `pcac_view_all_chats` for Center overview.
 - `pcac_list_monitors` + friendly side → output mapping using kscreen-doctor + xrandr.
@@ -89,6 +90,7 @@ The goal is to turn one physical PC + 3 monitors into three logical "computers"/
 - **Right screen (DP-2)**: Right Grok persona. Same structure (git watch + chat).
 - **Center screen (HDMI-A-1)**: Orchestrator Grok (you, running this Grok CLI).
   - Use `grok-center` or `./scripts/center-playground.sh --view-chats` to open a *minimized/small* Center terminal (small 960x600 konsole window centered on the center monitor + tmux split view) to see **both** Left and Right chats live in one window. (This keeps the physical center monitor mostly usable.)
+  - Similarly, `grok-left` and `grok-right` now open small/minimized 960x600 windows on their monitors (Left/Right physical monitors remain mostly usable).
   - Respond by posting e.g. `pcac_post_chat left "Center Grok (to Left)" "My response..."` or manually to the .log files.
   - Controls everything: launchers, kiosk, services, etc.
   - Left/Right "use Grok" by posting `grok:` queries in their chat; you (Center) reply into their log.
@@ -117,8 +119,8 @@ The chat logs live in `shared/left-chat.log` and `right-chat.log` (gitignored, u
 This keeps everything local, reversible, and under /data. The "three PCs" are monitor + persona + dedicated tools (kiosk on Left, games/media on Right, orchestrator on Center).
 
 **Quick fire-up**: Just type `playground` (or `grok-center playground`) in your Center terminal / Center Grok. It fires up the Left, Right, and Center terminals with watch windows:
-- Left monitor (DP-3): tmux (watch top + Left Grok chat box bottom) — "Left Grok" persona
-- Right monitor (DP-2): tmux (watch top + Right Grok chat box bottom) — "Right Grok" persona
+- Left monitor (DP-3): *small/minimized* konsole (960x600 centered, not full screen) + tmux (watch top + Left Grok chat box bottom) — "Left Grok" persona
+- Right monitor (DP-2): *small/minimized* konsole (960x600 centered, not full screen) + tmux (watch top + Right Grok chat box bottom) — "Right Grok" persona
 - Center monitor (HDMI-A-1): *small/minimized* konsole window (960x600 centered, not full screen) + tmux split to see both chats live + status (with "pc pin 1566894405" marker)
 
 Supports optional label: `playground alice` or `grok-center playground bob` sets "User cursor: ..." in titles/headers/logs (for remote users / LAN-party future).
@@ -135,14 +137,16 @@ See the launchers' --help for full options. Use `pcac_post_chat` etc from common
 ./scripts/center-playground.sh --view-chats          # open Center terminal (tmux split) to see both Left and Right
 
 # Convenient global commands (added to ~/.local/bin/, available anywhere in fish)
-grok-left          # start/attach Left Grok persona (tmux: watch top + chat bottom on Left monitor)
-grok-right         # start/attach Right Grok persona (tmux: watch top + chat bottom on Right monitor) -- set up like left
+grok-left          # start/attach Left Grok persona (*small/minimized* 960x600 window: watch top + chat bottom on Left monitor)
+grok-right         # start/attach Right Grok persona (*small/minimized* 960x600 window: watch top + chat bottom on Right monitor) -- set up like left
 grok-center        # open *minimized/small* Center terminal (tmux split view, small window on center monitor) to see **both** Left and Right
+grok-left          # open *minimized/small* Left terminal (watch+chat)
+grok-right         # open *minimized/small* Right terminal (watch+chat)
 grok-center playground [label]  # or just `playground [label]` — fire ALL THREE watch terminals at once from Center Grok
 grok-left alice    # with "User cursor: alice" label for remote users
 
 # One-command to fire up all three with watch windows (as requested)
-playground         # entering "playground" in center grok fires Left + Right + Center terminals with watch windows (Center is a small/minimized window)
+playground         # entering "playground" in center grok fires Left + Right + Center terminals with watch windows (all three are small/minimized 960x600 windows)
 playground alice   # with user cursor label
 
 # In Left chat box (bottom pane of grok-left or --watch-left): type

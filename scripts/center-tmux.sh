@@ -2,8 +2,8 @@
 # Center TMUX session: split view for monitoring both Left and Right chats.
 # This provides the "Center terminal to see both" Left and Right Grok personas.
 # Part of the three-persona setup.
-# Launched via grok-center / playground in a *minimized/small* konsole window
-# (960x600 centered) on the center monitor so the physical center display stays usable.
+# Launched (like Left/Right) via *minimized/small* konsole window (960x600 centered)
+# so the physical center display stays usable. All three persona windows are now small.
 
 set -euo pipefail
 
@@ -50,4 +50,7 @@ tmux select-pane -t "$SESSION:0.2" -T "Bus / Grok inbox"
 tmux rename-window -t "$SESSION" "center-monitor-both"
 
 echo "Center tmux ready (split view of both sides). Attaching..."
+echo "For interactive replies (including /tailor for different messages to Left vs Right):"
+echo "  source /data/PCaC-Playgrounds/scripts/lib/common.sh ; pcac_open_center_composer"
+echo "  (or just run 'center-composer' in another terminal on this monitor)"
 exec tmux attach -t "$SESSION"

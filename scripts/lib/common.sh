@@ -306,6 +306,125 @@ pcac_center_reply() {
   pcac_log INFO "Center replied to ${side}: ${msg}"
 }
 
+# Record a persistent fact/preference into a side's MEMORY.md.
+# This is the main tool for making Left/Right memory actually useful across sessions.
+# The fact is stored under "## Curated facts (Center)" with today's date.
+# Example: pcac_remember left "User prefers very short responses with 1-2 concrete next actions."
+pcac_remember() {
+  local side="$1"
+  shift || true
+  local fact="$*"
+  if [[ -z "$side" || -z "$fact" ]]; then
+    echo "Usage: pcac_remember left|right \"short fact or user preference\"" >&2
+    return 2
+  fi
+  if [[ "$side" != "left" && "$side" != "right" ]]; then
+    echo "side must be left or right" >&2
+    return 2
+  fi
+  python3 "${PCAC_ROOT}/scripts/pcac_remember.py" "$side" "$fact"
+}
+
+# Quick GPU / VRAM status (AMD card1 via sysfs; useful while both brains are inferencing).
+# Shows VRAM used/total and busy percentages if available.
+pcac_gpu_status() {
+  local card="/sys/class/drm/card1"
+  if [[ -f "$card/device/mem_info_vram_used" ]]; then
+    local used=$(( $(cat "$card/device/mem_info_vram_used" 2>/dev/null || echo 0) / 1024 / 1024 ))
+    local total=$(( $(cat "$card/device/mem_info_vram_total" 2>/dev/null || echo 0) / 1024 / 1024 ))
+    local gbusy=$(cat "$card/device/gpu_busy_percent" 2>/dev/null || echo "?")
+    local mbusy=$(cat "$card/device/mem_busy_percent" 2>/dev/null || echo "?")
+    printf "GPU status: VRAM %d/%d MB | gpu_busy=%s%% mem_busy=%s%%\n" "$used" "$total" "$gbusy" "$mbusy"
+  else
+    echo "GPU status: sysfs metrics not available for card1"
+  fi
+}
+
+# Have Left-Brain and Right-Brain converse with each other via their LM Studio models.
+# Center orchestrates, logs everything to both chat logs + the central bus (visible in grok-center).
+# Each brain gets the previous turn from the "other" injected into its recent context + the ask prompt.
+# Usage: pcac_converse left|right "the topic" [num_turns]
+# Example: pcac_converse left "ideas for low-stimulation creative hobbies that pair well with gaming" 5
+pcac_converse() {
+  local starter="${1:-left}"
+  local topic="$2"
+  local max_turns="${3:-4}"
+  if [[ -z "$topic" ]]; then
+    echo "Usage: pcac_converse left|right \"topic\" [num_turns=4]" >&2
+    echo "  Left and Right will exchange thoughts using their own LM Studio brains." >&2
+    echo "  All turns are posted to the chat logs and bus so Center sees everything." >&2
+    return 2
+  fi
+  if [[ "$starter" != "left" && "$starter" != "right" ]]; then
+    echo "starter side must be left or right" >&2
+    return 2
+  fi
+
+  local other
+  if [[ "$starter" == "left" ]]; then other="right"; else other="left"; fi
+
+  pcac_ensure_chats
+
+  local convo_id="cross-convo-$(date +%H%M%S)"
+  local init_msg="[$convo_id] Center starting cross-brain dialogue. Topic: $topic. Starter: $starter. ${max_turns} turns."
+  pcac_post_chat "$starter" "Center (cross)" "$init_msg" "cross_start"
+  pcac_post_chat "$other" "Center (cross)" "$init_msg" "cross_start"
+  pcac_bus_append "Center (cross)" "both" "cross_start" "$init_msg"
+  pcac_log INFO "$init_msg"
+
+  echo "$init_msg"
+  pcac_gpu_status
+
+  local current_side="$starter"
+  local last_msg=""
+  local turn=1
+  while (( turn <= max_turns )); do
+    local other_name
+    if [[ "$current_side" == "left" ]]; then other_name="Right-Brain"; else other_name="Left-Brain"; fi
+    local prompt="This is a direct conversation between Left-Brain and Right-Brain (you are ${current_side^}-Brain). Topic: $topic."
+    if [[ -n "$last_msg" ]]; then
+      prompt+=" $other_name just contributed: \"$last_msg\". Respond in your own persona and style. Keep it reasonably concise and in character. One or two paragraphs max."
+    else
+      prompt+=" Open the conversation with your initial thoughts on the topic, staying true to your role (analytical/chill for Left, creative/playful for Right)."
+    fi
+
+    echo "--- Turn $turn: asking $current_side-Brain (via LM Studio) ---"
+    # Call the python directly so we control the output and get clean reply.
+    # (It will still auto-log the brain_reply to the current_side's chat + bus as usual.)
+    local reply
+    reply=$(python3 "${PCAC_ROOT}/scripts/pcac_ask_brain.py" "$current_side" "$prompt" "$(whoami)" 2>&1 | tail -n 5 | grep -v '^\[' | tail -1 || true)
+    if [[ -z "$reply" ]]; then
+      reply=$(python3 "${PCAC_ROOT}/scripts/pcac_ask_brain.py" "$current_side" "$prompt" "$(whoami)" 2>&1 | tail -1)
+    fi
+    reply=$(echo "$reply" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')
+
+    echo "  $current_side-Brain: ${reply:0:120}..."
+    pcac_gpu_status
+
+    # Relay the reply into the *other* side's chat log so it appears in their recent context on next ask.
+    # This lets the receiving brain "hear" the other persona in its own log tail.
+    local from_label
+    if [[ "$current_side" == "left" ]]; then from_label="Left-Brain (to Right)"; else from_label="Right-Brain (to Left)"; fi
+    pcac_post_chat "$other" "$from_label" "$reply" "cross_turn"
+    pcac_bus_append "$from_label" "$other" "cross_turn" "$reply"
+
+    last_msg="$reply"
+
+    # switch speaker
+    current_side="$other"
+    if [[ "$current_side" == "left" ]]; then other="right"; else other="left"; fi
+
+    ((turn++))
+  done
+
+  local end_msg="[$convo_id] Cross-brain conversation complete."
+  pcac_post_chat left "Center (cross)" "$end_msg" "cross_end"
+  pcac_post_chat right "Center (cross)" "$end_msg" "cross_end"
+  pcac_bus_append "Center (cross)" "both" "cross_end" "$end_msg"
+  echo "$end_msg  (All turns logged to chats + bus. Use center-bus-watch or pcac_view_all_chats to review.)"
+  pcac_gpu_status
+}
+
 pcac_view_chat() {
   local side="$1"
   local log_file
@@ -374,7 +493,9 @@ pcac_auto_update() {
 pcac_open_watch_left() {
   local user_label="${1:-$(whoami)}"
   local tmux_script="${PCAC_ROOT}/scripts/left-tmux.sh"
-  local geom="1920x1080+0+0"   # Left monitor (DP-3): 0,0 origin, 1920 wide
+  # Small/minimized window centered on Left monitor (DP-3) for reduced footprint
+  # (960x600 floating, similar to Center). Full monitor remains usable.
+  local geom="960x600+480+240"
   local title="PCaC-Left-Screen-${user_label}"  # now includes watch + chat
 
   if [[ ! -x "$tmux_script" ]]; then
@@ -382,12 +503,12 @@ pcac_open_watch_left() {
     return 1
   fi
 
-  # Launch konsole on Left geometry running the combined watch+chat tmux session.
+  # Launch konsole (small window) on Left running the combined watch+chat tmux session.
   # This gives Left its own "terminal" with monitoring + separate chat box for using Grok (Left Grok persona).
   konsole --qwindowgeometry "$geom" --title "$title" -e "$tmux_script" "$user_label" &
   local pid=$!
-  pcac_log INFO "Opened Left combined screen (watch + chat) on DP-3 (geom $geom, user=$user_label, pid $pid)"
-  echo "  Title: $title (tmux: watch top, chat bottom - Ctrl-b arrows to switch)"
+  pcac_log INFO "Opened minimized Left combined screen (watch + chat) on DP-3 (geom $geom, user=$user_label, pid $pid)"
+  echo "  Title: $title (tmux: watch top, chat bottom - Ctrl-b arrows to switch) -- small/minimized window"
   echo "  User cursor label: $user_label"
   echo "  In chat: grok: → Center | ask: → local brain. Center: pcac_center_reply left|right '...'"
   echo "  To close: exit tmux (Ctrl-b d or type quit in chat) or kill $pid"
@@ -396,7 +517,9 @@ pcac_open_watch_left() {
 pcac_open_watch_right() {
   local user_label="${1:-$(whoami)}"
   local tmux_script="${PCAC_ROOT}/scripts/right-tmux.sh"
-  local geom="1920x1080+3840+0"  # Right monitor (DP-2): starts at x=3840
+  # Small/minimized window centered on Right monitor (DP-2) for reduced footprint
+  # (960x600 floating, similar to Left and Center). Full monitor remains usable.
+  local geom="960x600+4320+240"
   local title="PCaC-Right-Screen-${user_label}"  # now includes watch + chat
 
   if [[ ! -x "$tmux_script" ]]; then
@@ -404,12 +527,12 @@ pcac_open_watch_right() {
     return 1
   fi
 
-  # Launch konsole on Right geometry running the combined watch+chat tmux session.
+  # Launch konsole (small window) on Right running the combined watch+chat tmux session.
   # This gives Right its own "terminal" with monitoring + separate chat box for using Grok (Right Grok persona).
   konsole --qwindowgeometry "$geom" --title "$title" -e "$tmux_script" "$user_label" &
   local pid=$!
-  pcac_log INFO "Opened Right combined screen (watch + chat) on DP-2 (geom $geom, user=$user_label, pid $pid)"
-  echo "  Title: $title (tmux: watch top, chat bottom - Ctrl-b arrows to switch)"
+  pcac_log INFO "Opened minimized Right combined screen (watch + chat) on DP-2 (geom $geom, user=$user_label, pid $pid)"
+  echo "  Title: $title (tmux: watch top, chat bottom - Ctrl-b arrows to switch) -- small/minimized window"
   echo "  User cursor label: $user_label"
   echo "  In chat: grok: → Center | ask: → local brain. Center: pcac_center_reply left|right '...'"
   echo "  To close: exit tmux (Ctrl-b d or type quit in chat) or kill $pid"
@@ -500,12 +623,37 @@ pcac_open_center_monitor() {
   echo "  To close: close the konsole window or kill $pid"
 }
 
+# Launch an interactive Center Composer chat box (small window on center monitor).
+# This is the "chat box in the center" for responding to Left and/or Right.
+# Supports /tailor for sending different (tailored) messages to each side in one session.
+# Use alongside the center-tmux monitor (tails + bus).
+pcac_open_center_composer() {
+  local user_label="${1:-$(whoami)}"
+  local script="${PCAC_ROOT}/scripts/center-composer.sh"
+  # Positioned on center monitor (HDMI-A-1), slightly offset from the monitor tmux window.
+  local geom="900x500+2600+200"
+  local title="PCaC-Center-Composer-${user_label}"
+
+  if [[ ! -x "$script" ]]; then
+    pcac_log ERROR "center composer not found: $script"
+    return 1
+  fi
+
+  konsole --qwindowgeometry "$geom" --title "$title" -e "$script" "$user_label" &
+  local pid=$!
+  pcac_log INFO "Opened Center Composer input box (geom $geom, user=$user_label, pid $pid) | pc pin 1566894405"
+  echo "  Title: $title (interactive input for tailored responses to Left and/or Right)"
+  echo "  Type messages here; use /tailor for different text per side, /left /right /both for targeting."
+  echo "  All output logged to chats + bus. Pair with the small center-tmux monitor window."
+  echo "  To close: type 'quit' inside or kill $pid"
+}
+
 # --- Full playground launcher ---
 # When "playground" (or grok-center playground) is entered from Center Grok,
 # this fires up the three terminals with watch windows:
-#   - Left: konsole on DP-3 running tmux (watch top + Left Grok chat bottom)
-#   - Right: konsole on DP-2 running tmux (watch top + Right Grok chat bottom)
-#   - Center: small/minimized konsole window on HDMI-A-1 (960x600 centered) running tmux split view of both chats + status
+#   - Left: small/minimized konsole window (960x600 centered) on DP-3 running tmux (watch top + Left Grok chat bottom)
+#   - Right: small/minimized konsole window (960x600 centered) on DP-2 running tmux (watch top + Right Grok chat bottom)
+#   - Center: small/minimized konsole window (960x600 centered) on HDMI-A-1 running tmux split view of both chats + status
 # Supports optional user-label for "User cursor" (e.g. playground alice for remote).
 # Logs include "pc pin 1566894405" for auto/snapshot context.
 pcac_launch_playground() {
