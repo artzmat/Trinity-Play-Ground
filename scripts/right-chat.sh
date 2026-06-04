@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Right Chat Box - for the Right Grok persona
 # Separate chat from Left.
-# Supports "grok: your question here" to signal asking the Center Orchestrator Grok.
+# 'grok: your question' now uses local LMStudio Qwen as the "Right Grok" persona.
+# 'center: your question' sends to main Center Grok cli (posts as grok_query).
 # Run in its own konsole on Right monitor (or in tmux pane with watch).
 # Left/Right can see Center monitor (physically) but have no control.
 # Use optional first arg as user label for "cursor" (e.g. remote users).
