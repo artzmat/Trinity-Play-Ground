@@ -37,6 +37,9 @@ show_header() {
   echo "  /right <msg>    Send only to Right (tailored for creative/play)"
   echo "  /both <msg>     Send same to both (default if no prefix)"
   echo "  /tailor         Enter two different messages (one for each side) in one go"
+  echo "  /ask-left <q>   Ask Left-Brain (local LM Studio) the question, show reply"
+  echo "  /ask-right <q>  Ask Right-Brain (local LM Studio) the question, show reply"
+  echo "  /ask-both <q>   Ask both Left+Right brains in parallel, show both replies"
   echo "  /inbox          Show recent grok: queries from sides"
   echo "  /recent         Show recent activity from both sides"
   echo "  /help           This help"
@@ -62,6 +65,7 @@ show_inbox() {
 show_help() {
   echo "Tips for tailored responses:"
   echo "  - Use /tailor to craft a structured version for Left and a vibe/options version for Right."
+  echo "  - Use /ask-left /ask-right /ask-both to query the local LM Studio brains for ideas before replying."
   echo "  - The sides will see your message in their chat box as coming from 'Center Grok (to Left)' etc."
   echo "  - Everything is also on the bus for full audit."
   echo "  - Run this composer alongside the center-tmux monitor (tails + bus watch)."
@@ -151,6 +155,24 @@ main_loop() {
         msg="${input#*/both }"
         msg="${msg#*/b }"
         post_to_both "$msg"
+        ;;
+      /ask-left\ *|/al\ *)
+        q="${input#*/ask-left }"
+        q="${q#*/al }"
+        echo "[Asking Left-Brain...]"
+        pcac_ask_brain left "$q" "$USER_LABEL"
+        ;;
+      /ask-right\ *|/ar\ *)
+        q="${input#*/ask-right }"
+        q="${q#*/ar }"
+        echo "[Asking Right-Brain...]"
+        pcac_ask_brain right "$q" "$USER_LABEL"
+        ;;
+      /ask-both\ *|/ab\ *)
+        q="${input#*/ask-both }"
+        q="${q#*/ab }"
+        echo "[Asking both brains...]"
+        pcac_ask_both "$q" "$USER_LABEL"
         ;;
       *)
         # Default: send same to both
