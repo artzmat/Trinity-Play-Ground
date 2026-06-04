@@ -48,3 +48,4 @@ pcac_tail_bus 5 2>/dev/null || true
 echo ""
 echo "Test brains: pcac-ask-brain.sh left|right \"ping\" $(whoami)"
 echo "Test both:   pcac-ask-both.sh \"ping\" $(whoami)"
+echo "From CENTER composer: /ask-left /ask-right /ask-both"

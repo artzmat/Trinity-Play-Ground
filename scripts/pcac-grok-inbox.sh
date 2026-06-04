@@ -35,4 +35,5 @@ for o in queries[-n:]:
     print()
 PY
 echo "Reply: pcac_center_reply left|right \"message\"  |  both: pcac_center_reply_both \"...\""
-echo "Ask both brains: pcac-ask-both.sh \"question\" $(whoami)"
+echo "Ask brains from CENTER: pcac-ask-brain.sh left|right \"q\"  |  pcac-ask-both.sh \"q\"  |  or in composer: /ask-left /ask-both"
+echo "Converse brains: pcac-converse.sh left \"topic\" 5"
