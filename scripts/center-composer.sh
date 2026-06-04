@@ -177,7 +177,7 @@ main_loop() {
         pcac_ask_both "$q" "$USER_LABEL"
         ;;
       /power|/status|p)
-        ~/.local/bin/pcac-power-status 2>/dev/null || /data/PCaC-Playgrounds/scripts/pcac-power-status.sh
+        pcac-power-status 2>/dev/null || ~/.local/bin/pcac-power-status 2>/dev/null || /data/PCaC-Playgrounds/scripts/pcac-power-status.sh
         ;;
       *)
         # Default: send same to both

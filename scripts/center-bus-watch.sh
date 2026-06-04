@@ -13,6 +13,9 @@ echo "File: $PCAC_BUS_FILE"
 echo "grok_query → needs Center response (pcac_center_reply left|right '...')"
 echo "Ctrl-C to exit"
 echo "=============================="
+echo "Current hardware/power (use /power in center-composer for live):"
+~/.local/bin/pcac-power-status 2>/dev/null | head -8 || /data/PCaC-Playgrounds/scripts/pcac-power-status.sh | head -8 || echo "(power status script not found)"
+echo "=============================="
 
 if [[ ! -s "$PCAC_BUS_FILE" ]]; then
   echo "(waiting for first message...)"
