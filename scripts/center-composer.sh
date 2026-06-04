@@ -42,6 +42,7 @@ show_header() {
   echo "  /ask-both <q>   Ask both Left+Right brains in parallel, show both replies"
   echo "  /inbox          Show recent grok: queries from sides"
   echo "  /recent         Show recent activity from both sides"
+  echo "  /power          Show CPU/GPU power, profile, LM status (leverage your 5950X + 7900XTX)"
   echo "  /help           This help"
   echo "  quit / q / exit Leave the composer"
   echo "--------------------------------------------------------------------------------"
@@ -66,6 +67,7 @@ show_help() {
   echo "Tips for tailored responses:"
   echo "  - Use /tailor to craft a structured version for Left and a vibe/options version for Right."
   echo "  - Use /ask-left /ask-right /ask-both to query the local LM Studio brains for ideas before replying."
+  echo "  - Use /power to see how your 5950X + 7900XTX is doing (power, profile, LM status)."
   echo "  - The sides will see your message in their chat box as coming from 'Center Grok (to Left)' etc."
   echo "  - Everything is also on the bus for full audit."
   echo "  - Run this composer alongside the center-tmux monitor (tails + bus watch)."
@@ -173,6 +175,9 @@ main_loop() {
         q="${q#*/ab }"
         echo "[Asking both brains...]"
         pcac_ask_both "$q" "$USER_LABEL"
+        ;;
+      /power|/status|p)
+        ~/.local/bin/pcac-power-status 2>/dev/null || /data/PCaC-Playgrounds/scripts/pcac-power-status.sh
         ;;
       *)
         # Default: send same to both

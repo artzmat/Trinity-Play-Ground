@@ -61,7 +61,7 @@ Shared playground data (suggestions etc.) → `shared/` (inside repo for conveni
 - Center convenience:
   - `--watch-left [USER]` / `--watch-right [USER]`: open the full side screens from orchestrator.
   - `--view-chats`: tail both Left and Right chats in Center (orchestrator view).
-  - `center-composer` (or `pcac_open_center_composer`): dedicated interactive chat box on center monitor for responses. Supports sending the same message or **/tailor** for different tailored messages to Left vs. Right in one session. Also **/ask-left /ask-right /ask-both** (and standalone `pcac-ask-both.sh`, `pcac-converse.sh`) to directly query/utilize the local LM Studio Left/Right brains from CENTER. All centrally logged.
+  - `center-composer` (or `pcac_open_center_composer`): dedicated interactive chat box on center monitor for responses. Supports sending the same message or **/tailor** for different tailored messages to Left vs. Right in one session. Also **/ask-left /ask-right /ask-both** (and standalone `pcac-ask-both.sh`, `pcac-converse.sh`) to directly query/utilize the local LM Studio Left/Right brains from CENTER. **/power** shows CPU/GPU draw, profile, LM status to help optimize your 5950X + 7900XTX hardware. All centrally logged.
 - `pcac_post_chat left/right "From" "message"` or `pcac_center_reply left|right "message"` (or `pcac_center_reply_both`) for Center.
 - `pcac-grok-inbox` / `center-bus-watch.sh` — Center sees `grok:` queries on the bus.
 - `pcac_view_all_chats` for Center overview.
@@ -143,9 +143,10 @@ grok-right         # start/attach Right Grok persona (*small/minimized* 960x600 
 grok-center        # open *minimized/small* Center terminal (tmux split view, small window on center monitor) to see **both** Left and Right
 grok-left          # open *minimized/small* Left terminal (watch+chat)
 grok-right         # open *minimized/small* Right terminal (watch+chat)
-center-composer    # (in center) interactive reply box — now with /ask-left /ask-right /ask-both to utilize Left-Right-LMStudio from CENTER
+center-composer    # (in center) interactive reply box — now with /ask-left /ask-right /ask-both to utilize Left-Right-LMStudio from CENTER + /power for hardware optimization (5950X+7900XTX)
 pcac-ask-both.sh   # ask both local brains (prints their answers for Center to use)
 pcac-converse.sh   # start a conversation between Left-Brain and Right-Brain (Center logs it)
+pcac-power-status  # live CPU/GPU power, profile, LM status, load (leverage your hardware efficiently)
 grok-center playground [label]  # or just `playground [label]` — fire ALL THREE watch terminals at once from Center Grok
 grok-left alice    # with "User cursor: alice" label for remote users
 
