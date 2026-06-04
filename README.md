@@ -76,7 +76,7 @@ Distinct personalities live under `personas/`:
 - **Right-Brain** (`personas/right-brain/`) — creative, options-oriented, play/media
 - **Center** (`personas/center/MEMORY.md`) — orchestrator notes in repo
 
-Local LM Studio loads persona prompts on **`ask:`** in side chats (Phase 2). Use **`grok:`** for Center orchestrator. Machine-readable bus: `shared/bus/messages.jsonl` (dual-written with chat logs). See `docs/brains-phase2-20260603.md`.
+Local LM Studio loads persona prompts on **`ask:`** or **`grok:`** in side chats (the side "Grok" is now the local Qwen via LMStudio). Use **`center:`** (or `grok:` from Center) for the main Center orchestrator Grok cli. Machine-readable bus: `shared/bus/messages.jsonl` (dual-written with chat logs). See `docs/brains-phase2-20260603.md`.
 
 See `docs/brains-audit-20260603.md` and `docs/brains-phase1a-20260603.md` for storage setup on `/data/AI`.
 
@@ -85,7 +85,7 @@ The goal is to turn one physical PC + 3 monitors into three logical "computers"/
 
 - **Left screen (DP-3)**: Left Grok persona. Runs full tmux (via `--watch` or `--watch-left`):
   - Top: live health/logs watch.
-  - Bottom: interactive chat box. Type messages or `grok: your question to Center`.
+  - Bottom: interactive chat box. Type messages or `grok: your question` (now to local LMStudio side Grok) or `center: your question to Center`.
   - Can physically see Center monitor but has no control.
 - **Right screen (DP-2)**: Right Grok persona. Same structure (git watch + chat).
 - **Center screen (HDMI-A-1)**: Orchestrator Grok (you, running this Grok CLI).
@@ -93,7 +93,7 @@ The goal is to turn one physical PC + 3 monitors into three logical "computers"/
   - Similarly, `grok-left` and `grok-right` now open small/minimized 960x600 windows on their monitors (Left/Right physical monitors remain mostly usable).
   - Respond by posting e.g. `pcac_post_chat left "Center Grok (to Left)" "My response..."` or manually to the .log files.
   - Controls everything: launchers, kiosk, services, etc.
-  - Left/Right "use Grok" by posting `grok:` queries in their chat; you (Center) reply into their log.
+  - Left/Right "use Grok" (now local LMStudio) by posting `grok:` queries in their chat; you (Center) reply into their log (using `center:` from side or via composer).
   - `grok-center` gives you the "Center terminal to see both".
 
 **How to "chat as Left/Right"**:
@@ -156,7 +156,8 @@ playground         # entering "playground" in center grok fires Left + Right + C
 playground alice   # with user cursor label
 
 # In Left chat box (bottom pane of grok-left or --watch-left): type
-#   grok: what do you think about cozy games for the Right side?
+#   grok: what do you think about cozy games for the Right side?   (local side brain)
+#   center: coordinate with the other side   (to main grok cli)
 # Center Grok (you here) responds by posting to the log (or using pcac_post_chat)
 
 # From Left side (once you switch to that monitor or via delegation)
@@ -169,7 +170,7 @@ playground alice   # with user cursor label
 ./scripts/right-playground.sh --open-shared
 ./scripts/right-playground.sh --watch matt    # with user cursor label
 
-# In any chat: 'grok: ...' posts query; Center responds by appending "Center Grok (to Left): ..."
+# In side chat: 'grok: ...' queries local side brain (LMStudio); 'center: ...' posts query to main Center Grok cli; Center responds by appending "Center Grok (to Left): ..."
 # Left/Right see Center monitor physically but can't control it.
 
 # Inspect monitors + mapping

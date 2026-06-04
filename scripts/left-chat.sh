@@ -60,6 +60,7 @@ while true; do
     grok:*|Grok:*)
       msg="${input#*:}"
       msg=$(echo "$msg" | xargs)
+      pcac_post_chat left "Left Grok ($USER_LABEL)" "$msg"
       echo "[$(date '+%H:%M:%S')] Left-Brain (LMStudio) thinking..."
       if pcac_ask_brain left "$msg" "$USER_LABEL"; then
         echo "[$(date '+%H:%M:%S')] Left-Brain (as Left Grok) replied (see chat log)"
