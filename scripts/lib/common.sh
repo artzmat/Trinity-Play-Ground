@@ -471,6 +471,13 @@ pcac_sudo() {
     echo "Error: No sudo PIN found. Set PC_SUDO_PIN env or create $pin_file (600 perms) with your sudo code pin."
     return 1
   fi
+  # Prefer non-interactive sudo (works great after running the fix-pc-pin-sudoers.sh once,
+  # which adds NOPASSWD for pacman/paru). Falls back to feeding the pin as password.
+  # This makes "pc pin 1566894405" mechanism work for real updates without the pin
+  # having to be your actual login password.
+  if sudo -n "$@" 2>/dev/null; then
+    return 0
+  fi
   echo "$pin" | sudo -S "$@"
 }
 
