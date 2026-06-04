@@ -10,7 +10,7 @@ pcac_ensure_chats
 
 echo "=== PCaC BUS WATCH (Center) ==="
 echo "File: $PCAC_BUS_FILE"
-echo "grok_query → needs Center response (pcac_center_reply left|right '...')"
+echo "grok_query (from side 'center:' or main) → needs Center response (pcac_center_reply left|right '...')"
 echo "Ctrl-C to exit"
 echo "=============================="
 echo "Current hardware/power (use /power in center-composer for live):"

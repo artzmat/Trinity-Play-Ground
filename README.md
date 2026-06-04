@@ -99,10 +99,11 @@ The goal is to turn one physical PC + 3 monitors into three logical "computers"/
 **How to "chat as Left/Right"**:
 - On the side screen: run the chat (or use the bottom pane).
 - Type normal messages (they appear in log for Center to see).
-- Type `grok: tell me a chill suggestion for Right` — query to Center (bus + log).
-- Type `ask: what should I prioritize today?` — local Left/Right brain (LM Studio + personas).
-- From Center composer: use /ask-left /ask-right /ask-both to query the brains directly (utilizes Left-Right-LMStudio from CENTER).
-- Center sees it (via --view-chats or tail), thinks, posts response back as "Center Grok (to Left): ...".
+- On side: `grok: tell me a chill suggestion for Right` — query to the local Left/Right brain (LM Studio Qwen as the side "Grok").
+- On side: `center: what should I prioritize today?` — query to Center Orchestrator Grok (main grok cli) — appears as grok_query on bus.
+- `ask: ...` still works for local brain.
+- From Center composer: use /ask-left /ask-right /ask-both to directly utilize Left-Right-LMStudio brains from CENTER.
+- Center sees the center: queries (via bus watch or tail), thinks, posts response back as "Center Grok (to Left): ...".
 - The side sees the response in their chat pane.
 
 **Remote users / cursors**: Pass `[USER]` e.g. `--watch-left alice` — appears as "User cursor: alice" everywhere + in titles.
