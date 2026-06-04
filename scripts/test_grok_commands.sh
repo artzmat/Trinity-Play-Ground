@@ -60,4 +60,4 @@ fi
 
 # Demo auto update using the pin (from env or ~/.config/pc-sudo-pin)
 source scripts/lib/common.sh
-pcac_auto_update || echo "Auto update demo completed (sudo may need setup with your pin 1566894405 in ~/.config/pc-sudo-pin 600)"
+pcac_auto_update || echo "Auto update demo completed (if sudo failed: run 'sudo bash /data/PCaC-Playgrounds/scripts/fix-pc-pin-sudoers.sh' once to wire your pc pin 1566894405 for real pacman/paru)"

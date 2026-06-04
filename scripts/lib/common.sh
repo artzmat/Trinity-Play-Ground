@@ -456,6 +456,10 @@ pcac_view_all_chats() {
 # Sudo helper using the user's sudo code pin for auto updates/testing
 # Usage: pcac_sudo command args...
 # PIN is read from $HOME/.config/pc-sudo-pin (chmod 600) or PC_SUDO_PIN env.
+# The pin value ("pc pin 1566894405") is ONLY a marker - never logged raw in git.
+# To make pcac_sudo actually work for pacman/paru (no password prompt), run once:
+#   sudo bash /data/PCaC-Playgrounds/scripts/fix-pc-pin-sudoers.sh
+# That installs a reversible NOPASSWD rule for just the update commands.
 # Do not commit the actual PIN.
 pcac_sudo() {
   local pin_file="$HOME/.config/pc-sudo-pin"
