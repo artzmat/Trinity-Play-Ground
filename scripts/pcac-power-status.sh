@@ -11,7 +11,7 @@ echo "Time: $(date '+%H:%M:%S')"
 # CPU
 echo "--- CPU (5950X) ---"
 GOV=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo "?")
-FREQ=$(awk '{sum+=$1} END {printf "%.0f", sum/NR/1000}' /proc/cpuinfo 2>/dev/null || echo "?")
+FREQ=$(grep 'cpu MHz' /proc/cpuinfo | awk '{sum+=$4; n++} END {if (n>0) printf "%.0f", sum/n; else print "?"}' 2>/dev/null || echo "?")
 echo "Governor: $GOV | Avg freq: ${FREQ}MHz"
 echo "Profile: $(powerprofilesctl get 2>/dev/null || echo 'N/A')"
 
