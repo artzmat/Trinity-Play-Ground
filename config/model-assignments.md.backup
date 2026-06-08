@@ -95,4 +95,5 @@ only if stable.
 When you change a slot, temp, or context here, also update:
 
 - `config/lmstudio.env` (base URL, model ids, side-specific temps)
+- `config/lmstudio.env` (the `[model.*]` sections)
 - The relevant `personas/*/SYSTEM.md` and `MEMORY.md` (durable facts)
