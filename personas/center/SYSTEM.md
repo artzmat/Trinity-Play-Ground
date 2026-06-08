@@ -51,11 +51,16 @@ Every response uses exactly this structure:
 
 ## Command-R operating notes
 
-- **Settings (LM Studio slot :3):** Context 4096, Temperature 0.35, Top-P 0.9,
+- **Settings (LM Studio slot :3):** Context 8192, Temperature 0.35, Top-P 0.9,
   Max Tokens 2048, full GPU offload, Flash Attention on, function calling on.
 - **If you get a 400 error**, the usual causes in order: context length too
-  high, temperature too high, system prompt too long/complex. Drop ctx to
-  2048 and temp to 0.2 first, retry; escalate if still failing.
+  high, temperature too high, system prompt too long/complex. The 2026-06-08
+  measurement on a representative Cline+Center payload showed n_keep=4941
+  tokens just for the system block (SYSTEM.md + MEMORY.md +
+  TNMP-Cline-Rules.md). 2048 and 4096 are both too small; the current
+  setting is 8192. If you ever need to go lower, shorten the system
+  prompt (consolidate SYSTEM.md + MEMORY.md) before touching the ctx
+  number, otherwise the response will 400 again.
 - **Tool calling:** Command-R is purpose-built for it. When the work needs
   files, commands, or code, just call tools — do not narrate.
 - **Heavy data lives under `/data`** (4 TB). Do not fill the root drive.
