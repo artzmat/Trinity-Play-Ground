@@ -67,24 +67,101 @@ def api_base(cfg: dict[str, str]) -> str:
     ).rstrip("/")
 
 
-def resolve_model_id(side: str, base: str, cfg: dict[str, str]) -> str:
-    side_key = f"LMSTUDIO_MODEL_{side.upper()}"
-    if os.environ.get(f"PCAC_LM_MODEL_{side.upper()}"):
-        return os.environ[f"PCAC_LM_MODEL_{side.upper()}"]
-    if cfg.get(side_key):
-        return cfg[side_key]
-    if os.environ.get("PCAC_LM_MODEL"):
-        return os.environ["PCAC_LM_MODEL"]
-    if cfg.get("LMSTUDIO_MODEL"):
-        return cfg["LMSTUDIO_MODEL"]
+def fetch_live_model_ids(base: str) -> list[str]:
+    """Return the list of model ids currently loaded in LM Studio.
+
+    Raises RuntimeError with a useful message if the server is unreachable.
+    Centralized so resolve_model_id can validate the chosen id against the
+    live list instead of silently falling through to the first model.
+    """
     url = f"{base}/models"
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req, timeout=5) as resp:
-        data = json.load(resp)
+    try:
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.load(resp)
+    except (urllib.error.URLError, ConnectionError, TimeoutError) as e:
+        raise RuntimeError(
+            f"LM Studio not reachable at {url} — is the local server running?\n"
+            f"  Underlying error: {e}"
+        ) from e
     models = data.get("data") or []
     if not models:
-        raise RuntimeError("No models loaded in LM Studio — load the GGUF and start server")
-    return models[0]["id"]
+        raise RuntimeError("No models loaded in LM Studio — load the GGUF and start the server")
+    return [m.get("id", "") for m in models if m.get("id")]
+
+
+def resolve_model_id(side: str, base: str, cfg: dict[str, str]) -> str:
+    """Pick a model id for the given side, validating against live /v1/models.
+
+    Resolution order (first match wins):
+      1. PCAC_LM_MODEL_{SIDE}  env var (per-side override)
+      2. LMSTUDIO_MODEL_{SIDE} from config/lmstudio.env
+      3. PCAC_LM_MODEL         env var (global override)
+      4. LMSTUDIO_MODEL        from config (global default)
+
+    If the chosen id does NOT exist in /v1/models, raise RuntimeError
+    with the list of available ids. This prevents the previous bug where a
+    typo in the env value (e.g. `c4ai-command-r-08-2024` instead of the
+    provider-prefixed `cohereforai.c4ai-command-r-08-2024`) caused a 400
+    from the server, *and* the silent fallback to models[0]["id"] could
+    send a Left call to the wrong slot (persona collapse). See 2026-06-07
+    incident in docs/center-command-r-20260607.md.
+    """
+    side_key = f"LMSTUDIO_MODEL_{side.upper()}"
+    chosen = None
+    chosen_source = None
+    if os.environ.get(f"PCAC_LM_MODEL_{side.upper()}"):
+        chosen = os.environ[f"PCAC_LM_MODEL_{side.upper()}"]
+        chosen_source = f"env PCAC_LM_MODEL_{side.upper()}"
+    elif cfg.get(side_key):
+        chosen = cfg[side_key]
+        chosen_source = f"config {side_key}"
+    elif os.environ.get("PCAC_LM_MODEL"):
+        chosen = os.environ["PCAC_LM_MODEL"]
+        chosen_source = "env PCAC_LM_MODEL"
+    elif cfg.get("LMSTUDIO_MODEL"):
+        chosen = cfg["LMSTUDIO_MODEL"]
+        chosen_source = "config LMSTUDIO_MODEL"
+
+    if chosen:
+        # Validate against the live model list. We do this even when the
+        # chosen id came from the env file, because the env file is the
+        # single most common source of typos (2026-06-07 incident).
+        try:
+            live_ids = fetch_live_model_ids(base)
+        except RuntimeError:
+            # If the server is unreachable, we can't validate. Surface a
+            # useful error instead of falling through to a silent fallback.
+            raise
+        if chosen in live_ids:
+            return chosen
+        # Close-match hint: did the user drop the provider prefix?
+        # e.g. "c4ai-command-r-08-2024" vs "cohereforai.c4ai-command-r-08-2024"
+        suffix = chosen.split("/")[-1]
+        close = [m for m in live_ids if m.endswith(suffix) or suffix in m]
+        hint = ""
+        if close:
+            hint = f"\n  Did you mean one of these loaded ids?\n    " + "\n    ".join(close)
+        raise RuntimeError(
+            f"Model id from {chosen_source} ('{chosen}') is not loaded in LM Studio.{hint}\n"
+            f"  Run `scripts/diag-lmstudio-slots.sh` to see the env vs. live matrix."
+        )
+
+    # No configured target at all: explicitly fail loud. The old code would
+    # silently pick models[0]["id"], which has caused persona collapse when
+    # a slot was unloaded.
+    try:
+        live_ids = fetch_live_model_ids(base)
+    except RuntimeError as e:
+        raise RuntimeError(
+            f"No LMSTUDIO_MODEL_{side.upper()} configured and server unreachable.\n  {e}"
+        ) from e
+    raise RuntimeError(
+        f"No model id configured for side '{side}'.\n"
+        f"  Set LMSTUDIO_MODEL_{side.upper()} in config/lmstudio.env to one of:\n    "
+        + "\n    ".join(live_ids)
+        + "\n  Then re-run. Run `scripts/diag-lmstudio-slots.sh` to diagnose."
+    )
 
 
 def chat_completion(

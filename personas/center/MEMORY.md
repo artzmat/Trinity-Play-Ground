@@ -1,6 +1,6 @@
 # Center — orchestrator memory (optional)
 
-**Grok Center** runs on the center monitor (HDMI-A-1). Cloud Grok CLI is the primary orchestrator; this file is for **cross-side notes** you want in git (not a replacement for `~/.grok/memory`).
+**Center** runs on the center monitor (HDMI-A-1) and is powered by **Command-R** (`cohereforai.c4ai-command-r-08-2024`) in LM Studio, slot :3. This file is for **cross-side notes** you want in git (not a replacement for the LM Studio context).
 
 ## Three-way coordination
 
@@ -29,3 +29,11 @@
 - [2026-06-04] Trinity Habit Observer is now running persistently (nice/ionice). It produces proposals on the bus. Center should review and selectively apply 2-4 high-quality ones per day during active sessions.
 - [2026-06-04] Trinity Habit Observer is now running persistently (nice/ionice). It produces proposals on the bus. Center should review and selectively apply 2-4 high-quality ones per day during active sessions.
 - [2026-06-04] Right-Brain 'Check for updates from Center: Ask' processed: cross-convo 0929 reviewed (observer polish), mood roundtrip tested, observer self-reports + fix + restart wired per soft pick. Maps (PC-Stuff tree) updated. Self-training now has closed low-noise feedback loop. Observer at nice -n15 ionice -c3 persistent. Internal only, Center white protected.
+
+## Local-first migration (2026-06-07)
+
+- 2026-06-07: Center migrated from Cloud Grok → local **Command-R** (`cohereforai.c4ai-command-r-08-2024`) in LM Studio, slot :3. Cloud Grok removed from the active surface; no fallback configured.
+- 2026-06-07: Tool Agent role **absorbed** into Center. The fourth voice (Command-R on slot :3 for Cline/tool work) is now just Center. `personas/tool-agent/` moved to `personas/.deprecated/tool-agent/` for history. `scripts/tool-c.fish` renamed/repurposed to `scripts/center-c.fish` and now points to Center's inbox.
+- 2026-06-07: Center LM Studio settings (slot :3) — Context **4096**, Temperature **0.35**, Top-P 0.9, Max Tokens 2048, full GPU offload, Flash Attention on, function calling enabled. These are the values that resolve the prior 400 error. Increase ctx later only if stable.
+- 2026-06-07: New `personas/center/TNMP-Cline-Rules.md` is the Cline-tailored rules file for Center-on-Command-R. It inherits the Dispatch / Synthesis / Next Move format from `SYSTEM.md`, adds Cline terminators (`TASK COMPLETE` / `NEEDS INPUT` / `TOOL RESULT`), and documents the 400-error recovery procedure.
+- 2026-06-07: Trinity is now **three voices**: Left (Qwen :1), Right (Qwen :2), Center (Command-R :3). VRAM budget on a 24 GB card: Qwen :1 + :2 OR Command-R :3 comfortably; not all three at once.

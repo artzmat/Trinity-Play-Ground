@@ -28,7 +28,11 @@ PCaC-Playgrounds/
 ├── personas/                    # Left-Brain / Right-Brain / Center prompts + memory (git)
 │   ├── left-brain/              # SYSTEM.md + MEMORY.md
 │   ├── right-brain/
-│   └── center/
+│   ├── center/                  # SYSTEM.md + MEMORY.md + TNMP-Cline-Rules.md
+│   │                            # (Center = local Command-R on LM Studio slot :3;
+│   │                            #  tool-calling + coding agent role absorbed 2026-06-07)
+│   └── .deprecated/             # Historical personas preserved for reference
+│       └── tool-agent/          # Absorbed into Center on 2026-06-07
 ├── scripts/
 │   ├── left-playground.sh       # Target: left monitor (chill + suggestions + kiosk)
 │   ├── center-playground.sh     # Grok Center / main orchestrator + control
@@ -71,41 +75,81 @@ Shared playground data (suggestions etc.) → `shared/` (inside repo for conveni
 - `pcac_list_monitors` + friendly side → output mapping using kscreen-doctor + xrandr.
 - Everything logs + is reversible.
 
-## Left-Brain / Right-Brain personas (prompt + memory, no fine-tuning)
+## Personas (prompt + memory, no fine-tuning) — Left / Right / Center
 
 Distinct personalities live under `personas/`:
 
 - **Left-Brain** (`personas/left-brain/`) — analytical, structured, chill-layer support
 - **Right-Brain** (`personas/right-brain/`) — creative, options-oriented, play/media
-- **Center** (`personas/center/MEMORY.md`) — orchestrator notes in repo
+- **Center** (`personas/center/`) — orchestrator **and** tool caller, running on
+  **Command-R** in LM Studio slot `:3`, surfaced through **code-oss + Cline**
+  via the `center-c` fish bridge. Use for cross-cutting dispatch, synthesis,
+  and any multi-step work that needs tools: code edits, refactors, file
+  analysis, agent loops. See `docs/center-command-r-20260607.md`.
 
-Local LM Studio loads persona prompts on **`ask:`** or **`grok:`** in side chats (the side "Grok" is now the local Qwen via LMStudio). Use **`center:`** (or `grok:` from Center) for the main Center orchestrator Grok cli. Machine-readable bus: `shared/bus/messages.jsonl` (dual-written with chat logs). See `docs/brains-phase2-20260603.md`.
+> **Trinity is now three voices.** The previous separate "Tool Agent"
+> persona (also Command-R, also slot `:3`) is **absorbed into Center** as
+> of 2026-06-07 — see `personas/center/MEMORY.md` and
+> `personas/.deprecated/tool-agent/`. The Trinity is fully local: Left/Right
+> run on Qwen 2.5-Coder-14B (slots `:1`/`:2`), Center runs on Command-R
+> (slot `:3`). Cloud Grok is no longer the Center orchestrator.
+
+Local LM Studio loads persona prompts on **`ask:`** or **`grok:`** in side chats (the side "Grok" is now the local Qwen via LMStudio). Use **`center:`** (or `grok:` from Center) for the main Center orchestrator. Machine-readable bus: `shared/bus/messages.jsonl` (dual-written with chat logs). See `docs/brains-phase2-20260603.md`.
 
 See `docs/brains-audit-20260603.md` and `docs/brains-phase1a-20260603.md` for storage setup on `/data/AI`.
 
-## Three-Persona "PC into Three" Setup (Left Grok / Right Grok / Center Orchestrator Grok)
-The goal is to turn one physical PC + 3 monitors into three logical "computers"/personas by running a full Grok CLI (cloud) instance in each, configured as its persona. LM Studio / local models are **optional** (for acceleration or the old local `ask:` brains) — not required for the core experience.
+### Routing work to the right voice
 
-- **Left screen (DP-3)**: Left Grok persona (full Grok TUI with Left-Brain SYSTEM.md + MEMORY.md baked in at launch). Runs in tmux (via `grok-left`):
+| Task shape | Voice | How |
+|---|---|---|
+| Quick Q&A, planning, structure, chill | **Left-Brain** | `ask: ...` from Left, or local Qwen on slot `:1` |
+| Creative options, naming, vibe, play | **Right-Brain** | `ask: ...` from Right, or local Qwen on slot `:2` |
+| Cross-cutting decisions, dispatch, AND multi-step tool work | **Center** | `center-c "..."` (local Command-R on slot `:3`) |
+
+**Install `center-c`:**
+```bash
+cp scripts/center-c.fish ~/.config/fish/functions/center-c.fish
+chmod +x ~/.config/fish/functions/center-c.fish
+```
+
+**Use it:**
+```bash
+center-c "Analyze the Bottum genealogy PDF and extract Revolutionary War service records. Output as structured markdown."
+center-c --help
+center-c --inbox --tail
+```
+
+The directive is written to `~/.tnmp/inboxes/center.md` and opened in
+`code-oss` so Cline (Command-R on slot :3) can execute it with tool calls.
+Full setup + usage: `docs/center-command-r-20260607.md`.
+
+## Three-Persona "PC into Three" Setup (Left / Right / Center)
+The goal is to turn one physical PC + 3 monitors into three logical "computers"/personas. The Trinity is **fully local** as of 2026-06-07:
+
+- **Left + Right** (slots `:1` / `:2` in LM Studio): Qwen 2.5-Coder-14B Q4_K_M, surfaced through fish-launcher tmux panes (`grok-left`, `grok-right`).
+- **Center** (slot `:3` in LM Studio): **Command-R** (orchestrator + tool caller), surfaced through the `center-c` fish bridge into code-oss + Cline. **No cloud Grok for Center anymore.**
+
+Cloud Grok is no longer in the active loop for any voice. If a previous session left a cloud `grok-center` / `grok-left` / `grok-right` shell alias behind, it will still work but will route to a deprecated path — prefer the local flow.
+
+- **Left screen (DP-3)**: Left-Brain persona (local Qwen with Left-Brain SYSTEM.md + MEMORY.md baked in). Runs in tmux (via `grok-left`):
   - Top: live health/logs watch.
-  - Bottom: interactive chat box. Type messages or `grok: your question` (now to local LMStudio side Grok) or `center: your question to Center`.
+  - Bottom: interactive chat box. Type messages or `grok: your question` (to local Qwen via LM Studio) or `center: your question for Center`.
   - Can physically see Center monitor but has no control.
-- **Right screen (DP-2)**: Right Grok persona. Same structure (git watch + chat). Colorful immersive play zone.
-- **Center screen (HDMI-A-1)**: User's primary personal workspace (clean/white themed HQ). Orchestrator Grok (you, running this Grok CLI) lives here.
-  - Use `grok-center` or `./scripts/center-playground.sh --view-chats` to open a *minimized/small* Center terminal (small 960x600 konsole window centered on the center monitor + tmux split view) to see **both** Left and Right chats live in one window. (This keeps the physical center monitor mostly usable for the user's clean white personal desktop.)
-  - Similarly, `grok-left` and `grok-right` now open small/minimized 960x600 windows on their monitors (Left/Right physical monitors remain mostly usable for their layers).
-  - Respond by posting e.g. `pcac_post_chat left "Center Grok (to Left)" "My response..."` or manually to the .log files.
+- **Right screen (DP-2)**: Right-Brain persona. Same structure (git watch + chat). Colorful immersive play zone.
+- **Center screen (HDMI-A-1)**: User's primary personal workspace (clean/white themed HQ). Center (Command-R) lives here in code-oss + Cline, opened by `center-c "..."`.
+  - Use `./scripts/center-playground.sh --view-chats` to open a *minimized/small* Center terminal (small 960x600 konsole window centered on the center monitor + tmux split view) to see **both** Left and Right chats live in one window. (This keeps the physical center monitor mostly usable for the user's clean white personal desktop.)
+  - Similarly, `grok-left` and `grok-right` open small/minimized 960x600 windows on their monitors.
+  - Respond by posting e.g. `pcac_post_chat left "Center" "My response..."` or manually to the .log files.
   - Controls everything: launchers, kiosk, services, etc.
-  - Left/Right "use Grok" (now local LMStudio) by posting `grok:` queries in their chat; you (Center) reply into their log (using `center:` from side or via composer).
-  - `grok-center` gives you the "Center terminal to see both".
+  - Left/Right can call Center with `center: ...` in their chat; Center replies into the side's log.
+  - For multi-step tool work, Center uses `center-c "..."` (it writes to its own inbox and Cline executes).
 
-**How the personas work now (simplified grok-cli-in-each mode)**:
-- On the side screen: the bottom pane *is* the full Grok TUI running as that persona (Left-Brain or Right-Brain with full cloud capabilities + injected SYSTEM + MEMORY).
-- The persona Grok can reason, use tools (with your approval), remember (its own + the injected shared MD), etc.
-- For coordination with Center or the other persona: the side Grok is instructed to post to the shared bus (it can use terminal commands to do so). Center (you) monitors the bus in the visibility window and can respond by posting to the side's log or using the composer.
-- You (human at Center) can also directly use the Center Composer (`center-composer`) with /tailor to send different tailored messages to the two side Groks' logs.
-- No more `ask:` / local LM distinction — the side Groks *are* the smart personas.
-- The old local LM Studio mode is still available if you start it (for fast/private/local `ask:` or the old scripts), but not required.
+**How the personas work now (fully local, three voices)**:
+- On the side screen: the bottom pane is the **local Qwen** TUI running as that persona (Left-Brain or Right-Brain with SYSTEM + MEMORY injected at launch).
+- The side persona can reason, remember (its own + the injected shared MD), and post to the shared bus for coordination.
+- For coordination with Center or the other persona: the side persona is instructed to post to the shared bus. Center monitors the bus and can respond by posting to the side's log or using the composer.
+- You (human at Center) can also directly use the Center Composer (`center-composer`) with /tailor to send different tailored messages to the two side personas' logs.
+- The `ask:` / local LM Studio distinction is gone; the side personas run Qwen via LM Studio on slot `:1` / `:2` directly. Center runs Command-R on slot `:3` via the `center-c` bridge.
 
 **Remote users / cursors**: Pass `[USER]` e.g. `grok-left alice` — appears in titles and can be used in prompts.
 
